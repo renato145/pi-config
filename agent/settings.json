@@ -4,7 +4,7 @@
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system"
   ],
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "defaultProvider": "opencode",
   "defaultModel": "kimi-k2.6",
   "defaultThinkingLevel": "medium"
