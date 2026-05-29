@@ -1,0 +1,11 @@
+{
+  "lastChangelogVersion": "0.77.0",
+  "packages": [
+    "npm:@juicesharp/rpiv-web-tools",
+    "npm:@gotgenes/pi-permission-system"
+  ],
+  "hideThinkingBlock": false,
+  "defaultProvider": "opencode",
+  "defaultModel": "kimi-k2.6",
+  "defaultThinkingLevel": "medium"
+}
