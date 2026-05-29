@@ -16,10 +16,23 @@
     "grep": "allow",
     "ls": "allow",
     "bash": {
+      "*": "ask",
       "rm -rf *": "deny",
+      "rm -rf /": "deny",
+      "rm -rf ~/*": "deny",
       "sudo *": "ask",
       "git status": "allow",
-      "git *": "ask"
+      "git diff": "allow",
+      "git log*": "allow",
+      "git *": "ask",
+      "find *": "allow",
+      "ls *": "allow",
+      "cat *": "allow",
+      "grep *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "mkdir *": "ask",
+      "touch *": "ask"
     },
     "external_directory": "ask"
   }
