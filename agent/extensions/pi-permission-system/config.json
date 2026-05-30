@@ -1,6 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/gotgenes/pi-permission-system/main/schemas/permissions.schema.json",
 
+  "piInfrastructureReadPaths": [
+    "/home/renato/.local/share/nvm/v24.14.0/lib/node_modules/@earendil-works/pi-coding-agent"
+  ],
+
   "permission": {
     "*": "ask",
     "path": {
