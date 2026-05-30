@@ -1,4 +1,33 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { copyToClipboard } from "@earendil-works/pi-coding-agent";
+
+function extractText(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  const parts: string[] = [];
+  for (const block of content) {
+    if (
+      block &&
+      typeof block === "object" &&
+      "type" in block &&
+      block.type === "text" &&
+      "text" in block &&
+      typeof block.text === "string"
+    ) {
+      parts.push(block.text);
+    }
+  }
+  return parts.join("\n");
+}
+
+function stripMarkdownCodeBlocks(text: string): string {
+  // Remove triple-backtick code blocks (with optional language tag)
+  text = text.replace(/^```[\w]*\n?/gm, "");
+  text = text.replace(/\n?```$/gm, "");
+  // Remove inline single-backtick wrapping
+  text = text.replace(/^`+|`+$/g, "");
+  return text.trim();
+}
 
 export default function (pi: ExtensionAPI) {
   pi.registerCommand("commit", {
@@ -29,6 +58,8 @@ export default function (pi: ExtensionAPI) {
         ? `scope: ${args.trim()}`
         : "infer the scope from the changes";
 
+      const beforeCount = ctx.sessionManager.getBranch().length;
+
       pi.sendUserMessage(
         `Write a concise conventional commit message for these ${source} changes.\n\n` +
           `Rules:\n` +
@@ -39,6 +70,32 @@ export default function (pi: ExtensionAPI) {
           `- Do not include a "Signed-off-by" line unless requested\n\n` +
           `\`\`\`diff\n${diffResult.stdout}\n\`\`\``,
       );
+
+      await ctx.waitForIdle();
+
+      const branch = ctx.sessionManager.getBranch();
+      let messageText = "";
+      for (let i = branch.length - 1; i >= beforeCount; i--) {
+        const entry = branch[i];
+        if (entry.type === "message" && entry.message?.role === "assistant") {
+          messageText = extractText(entry.message.content);
+          break;
+        }
+      }
+
+      if (!messageText.trim()) {
+        ctx.ui.notify("No commit message generated", "warning");
+        return;
+      }
+
+      const cleanMessage = stripMarkdownCodeBlocks(messageText);
+
+      try {
+        await copyToClipboard(cleanMessage);
+        ctx.ui.notify("Commit message copied to clipboard", "info");
+      } catch {
+        ctx.ui.notify("Failed to copy commit message to clipboard", "warning");
+      }
     },
   });
 }
