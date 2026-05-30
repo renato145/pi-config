@@ -69,52 +69,60 @@ export default function (pi: ExtensionAPI) {
         if (handled) return;
         handled = true;
 
-        let messageText = "";
-        for (let i = event.messages.length - 1; i >= 0; i--) {
-          const msg = event.messages[i];
-          if (msg.role === "assistant") {
-            messageText = extractText(msg.content);
-            break;
+        try {
+          let messageText = "";
+          for (let i = event.messages.length - 1; i >= 0; i--) {
+            const msg = event.messages[i];
+            if (msg.role === "assistant") {
+              messageText = extractText(msg.content);
+              break;
+            }
           }
-        }
 
-        if (!messageText.trim()) {
-          ctx.ui.notify("No commit message generated", "warning");
-          return;
-        }
+          if (!messageText.trim()) {
+            ctx.ui.notify("No commit message generated", "warning");
+            return;
+          }
 
-        const cleanMessage = stripMarkdownCodeBlocks(messageText);
+          const cleanMessage = stripMarkdownCodeBlocks(messageText);
 
-        const editedMessage = await ctx.ui.editor(
-          "Edit commit message",
-          cleanMessage,
-        );
+          const editedMessage = await ctx.ui.editor(
+            "Edit commit message",
+            cleanMessage,
+          );
 
-        if (editedMessage === undefined) {
-          ctx.ui.notify("Commit cancelled", "info");
-          return;
-        }
+          if (editedMessage === undefined) {
+            ctx.ui.notify("Commit cancelled", "info");
+            return;
+          }
 
-        const trimmedMessage = editedMessage.trim();
-        if (!trimmedMessage) {
-          ctx.ui.notify("Commit cancelled — empty message", "warning");
-          return;
-        }
+          const trimmedMessage = editedMessage.trim();
+          if (!trimmedMessage) {
+            ctx.ui.notify("Commit cancelled — empty message", "warning");
+            return;
+          }
 
-        const commitResult = await pi.exec(
-          "git",
-          ["commit", "-m", trimmedMessage],
-          { cwd: ctx.cwd },
-        );
+          const commitResult = await pi.exec(
+            "git",
+            ["commit", "-m", trimmedMessage],
+            { cwd: ctx.cwd },
+          );
 
-        if (commitResult.code === 0) {
-          ctx.ui.notify("Committed successfully", "info");
-        } else {
-          const err =
-            commitResult.stderr.trim() ||
-            commitResult.stdout.trim() ||
-            "git commit failed";
-          ctx.ui.notify(err, "error");
+          if (commitResult.code === 0) {
+            ctx.ui.setStatus("commit", "Committed successfully");
+            ctx.ui.notify("Committed successfully", "info");
+          } else {
+            const err =
+              commitResult.stderr.trim() ||
+              commitResult.stdout.trim() ||
+              "git commit failed";
+            ctx.ui.setStatus("commit", `Commit failed: ${err}`);
+            ctx.ui.notify(err, "error");
+          }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          ctx.ui.setStatus("commit", `Commit error: ${msg}`);
+          ctx.ui.notify(msg, "error");
         }
       });
 
