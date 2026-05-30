@@ -1,5 +1,4 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { copyToClipboard } from "@earendil-works/pi-coding-agent";
 
 function extractText(content: unknown): string {
   if (typeof content === "string") return content;
@@ -65,9 +64,6 @@ export default function (pi: ExtensionAPI) {
         `- Do not include a "Signed-off-by" line unless requested\n\n` +
         `\`\`\`diff\n${diffResult.stdout}\n\`\`\``;
 
-      // One-shot listener: fires when the agent finishes processing the
-      // prompt sent below. We grab the last assistant message from this
-      // turn and copy it to the clipboard.
       let handled = false;
       pi.on("agent_end", async (event, ctx) => {
         if (handled) return;
@@ -89,14 +85,36 @@ export default function (pi: ExtensionAPI) {
 
         const cleanMessage = stripMarkdownCodeBlocks(messageText);
 
-        try {
-          await copyToClipboard(cleanMessage);
-          ctx.ui.notify("Commit message copied to clipboard", "info");
-        } catch {
-          ctx.ui.notify(
-            "Failed to copy commit message to clipboard",
-            "warning",
-          );
+        const editedMessage = await ctx.ui.editor(
+          "Edit commit message",
+          cleanMessage,
+        );
+
+        if (editedMessage === undefined) {
+          ctx.ui.notify("Commit cancelled", "info");
+          return;
+        }
+
+        const trimmedMessage = editedMessage.trim();
+        if (!trimmedMessage) {
+          ctx.ui.notify("Commit cancelled — empty message", "warning");
+          return;
+        }
+
+        const commitResult = await pi.exec(
+          "git",
+          ["commit", "-m", trimmedMessage],
+          { cwd: ctx.cwd },
+        );
+
+        if (commitResult.code === 0) {
+          ctx.ui.notify("Committed successfully", "info");
+        } else {
+          const err =
+            commitResult.stderr.trim() ||
+            commitResult.stdout.trim() ||
+            "git commit failed";
+          ctx.ui.notify(err, "error");
         }
       });
 
