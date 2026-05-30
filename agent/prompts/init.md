@@ -3,11 +3,19 @@ description: Analyze codebase and create or improve AGENTS.md
 argument-hint: "[path]"
 ---
 
-Please analyze this codebase and create an AGENTS.md file containing:
+Analyze the codebase at ${1:-.} and create or update its AGENTS.md file.
 
-1. Build/lint/test commands - especially for running a single test
-2. Code style guidelines including imports, formatting, types, naming conventions, error handling, etc.
+Start by exploring the project structure, config files, and existing docs before writing anything.
 
-The file you create will be given to agentic coding agents (such as yourself) that operate in this repository. Make it about 20 lines long.
+The AGENTS.md should contain:
 
-If there's already an AGENTS.md, improve it if it's located in $1
+1. **Project summary** — what it is, main language/framework, entry points
+2. **Commands** — build, lint, test (especially how to run a single test)
+3. **Code style** — imports, formatting, types, naming conventions, error handling
+4. **Architecture** — key directories, main abstractions, data flow
+
+This file will be consumed by coding agents working in this repo. Keep it under
+150 lines, focus on what an agent needs to make correct edits, not general
+documentation.
+
+If an AGENTS.md already exists, preserve what's accurate and improve what's missing or outdated.
