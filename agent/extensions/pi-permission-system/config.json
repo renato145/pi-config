@@ -19,6 +19,8 @@
     "find": "allow",
     "grep": "allow",
     "ls": "allow",
+    "web_search": "allow",
+    "web_fetch": "allow",
     "bash": {
       "*": "ask",
       "rm -rf *": "deny",
