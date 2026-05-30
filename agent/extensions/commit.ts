@@ -21,10 +21,8 @@ function extractText(content: unknown): string {
 }
 
 function stripMarkdownCodeBlocks(text: string): string {
-  // Remove triple-backtick code blocks (with optional language tag)
   text = text.replace(/^```[\w]*\n?/gm, "");
   text = text.replace(/\n?```$/gm, "");
-  // Remove inline single-backtick wrapping
   text = text.replace(/^`+|`+$/g, "");
   return text.trim();
 }
@@ -38,7 +36,6 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      // Try staged first, fall back to unstaged
       let diffResult = await pi.exec("git", ["diff", "--cached"], {
         cwd: ctx.cwd,
       });
@@ -58,44 +55,52 @@ export default function (pi: ExtensionAPI) {
         ? `scope: ${args.trim()}`
         : "infer the scope from the changes";
 
-      const beforeCount = ctx.sessionManager.getBranch().length;
-
-      pi.sendUserMessage(
+      const prompt =
         `Write a concise conventional commit message for these ${source} changes.\n\n` +
-          `Rules:\n` +
-          `- Format: type(${scope}): subject\n` +
-          `- Type: feat, fix, docs, style, refactor, perf, test, or chore\n` +
-          `- Subject: imperative mood, lowercase, no period, max 50 chars\n` +
-          `- Body: only if the "why" isn't obvious, wrap at 72 chars\n` +
-          `- Do not include a "Signed-off-by" line unless requested\n\n` +
-          `\`\`\`diff\n${diffResult.stdout}\n\`\`\``,
-      );
+        `Rules:\n` +
+        `- Format: type(${scope}): subject\n` +
+        `- Type: feat, fix, docs, style, refactor, perf, test, or chore\n` +
+        `- Subject: imperative mood, lowercase, no period, max 50 chars\n` +
+        `- Body: only if the "why" isn't obvious, wrap at 72 chars\n` +
+        `- Do not include a "Signed-off-by" line unless requested\n\n` +
+        `\`\`\`diff\n${diffResult.stdout}\n\`\`\``;
 
-      await ctx.waitForIdle();
+      // One-shot listener: fires when the agent finishes processing the
+      // prompt sent below. We grab the last assistant message from this
+      // turn and copy it to the clipboard.
+      let handled = false;
+      pi.on("agent_end", async (event, ctx) => {
+        if (handled) return;
+        handled = true;
 
-      const branch = ctx.sessionManager.getBranch();
-      let messageText = "";
-      for (let i = branch.length - 1; i >= beforeCount; i--) {
-        const entry = branch[i];
-        if (entry.type === "message" && entry.message?.role === "assistant") {
-          messageText = extractText(entry.message.content);
-          break;
+        let messageText = "";
+        for (let i = event.messages.length - 1; i >= 0; i--) {
+          const msg = event.messages[i];
+          if (msg.role === "assistant") {
+            messageText = extractText(msg.content);
+            break;
+          }
         }
-      }
 
-      if (!messageText.trim()) {
-        ctx.ui.notify("No commit message generated", "warning");
-        return;
-      }
+        if (!messageText.trim()) {
+          ctx.ui.notify("No commit message generated", "warning");
+          return;
+        }
 
-      const cleanMessage = stripMarkdownCodeBlocks(messageText);
+        const cleanMessage = stripMarkdownCodeBlocks(messageText);
 
-      try {
-        await copyToClipboard(cleanMessage);
-        ctx.ui.notify("Commit message copied to clipboard", "info");
-      } catch {
-        ctx.ui.notify("Failed to copy commit message to clipboard", "warning");
-      }
+        try {
+          await copyToClipboard(cleanMessage);
+          ctx.ui.notify("Commit message copied to clipboard", "info");
+        } catch {
+          ctx.ui.notify(
+            "Failed to copy commit message to clipboard",
+            "warning",
+          );
+        }
+      });
+
+      pi.sendUserMessage(prompt);
     },
   });
 }
