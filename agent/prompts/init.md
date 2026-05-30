@@ -1,0 +1,13 @@
+---
+description: Analyze codebase and create or improve AGENTS.md
+argument-hint: "[path]"
+---
+
+Please analyze this codebase and create an AGENTS.md file containing:
+
+1. Build/lint/test commands - especially for running a single test
+2. Code style guidelines including imports, formatting, types, naming conventions, error handling, etc.
+
+The file you create will be given to agentic coding agents (such as yourself) that operate in this repository. Make it about 20 lines long.
+
+If there's already an AGENTS.md, improve it if it's located in $1
