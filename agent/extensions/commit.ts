@@ -109,19 +109,16 @@ export default function (pi: ExtensionAPI) {
           );
 
           if (commitResult.code === 0) {
-            ctx.ui.setStatus("commit", "Committed successfully");
             ctx.ui.notify("Committed successfully", "info");
           } else {
             const err =
               commitResult.stderr.trim() ||
               commitResult.stdout.trim() ||
               "git commit failed";
-            ctx.ui.setStatus("commit", `Commit failed: ${err}`);
             ctx.ui.notify(err, "error");
           }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
-          ctx.ui.setStatus("commit", `Commit error: ${msg}`);
           ctx.ui.notify(msg, "error");
         }
       });
