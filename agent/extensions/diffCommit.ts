@@ -27,7 +27,7 @@ function stripMarkdownCodeBlocks(text: string): string {
 }
 
 export default function (pi: ExtensionAPI) {
-  pi.registerCommand("commit", {
+  pi.registerCommand("diff-commit", {
     description: "Write a git commit message from staged changes",
     handler: async (args, ctx) => {
       if (!ctx.isIdle()) {
