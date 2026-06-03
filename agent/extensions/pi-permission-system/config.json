@@ -37,6 +37,13 @@
       "grep *": "allow",
       "head *": "allow",
       "tail *": "allow",
+      "wc *": "allow",
+      "which *": "allow",
+      "readlink *": "allow",
+      "dirname *": "allow",
+      "cargo check*": "allow",
+      "cargo clippy*": "allow",
+      "cargo fmt*": "allow",
       "mkdir *": "ask",
       "touch *": "ask"
     },
