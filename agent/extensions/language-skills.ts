@@ -2,27 +2,31 @@
  * Language Skills Bridge Extension
  *
  * Detects the programming languages used in the current repository and
- * injects language-specific skill content into the system prompt only
- * when that language is detected.
+ * exposes matching language-specific skills to Pi via the
+ * `resources_discover` event. Pi then discovers them as regular skills,
+ * loading them on-demand (progressive disclosure) without any files
+ * created in the working repository.
  *
- * Skills live in language-skills/ (not the standard skills/ path) so Pi
- * does not auto-discover them. This keeps them out of the system prompt
- * unless the repository actually uses that language.
+ * Convention:
+ *   ~/.pi/agent/language-skills/{language}-{topic}/SKILL.md
+ *   e.g. ~/.pi/agent/language-skills/rust-guidelines/SKILL.md
  *
- * Convention: {language-skills-dir}/{language}/{topic}.md
- *   e.g. ~/.pi/agent/language-skills/rust/guidelines.md
+ * Why directory-based:
+ *   Pi's skill discovery requires each skill to be a directory containing
+ *   SKILL.md. Arbitrary .md files in nested folders are not discovered.
  *
  * Commands:
- *   /lang-skills  - Preview the prompt that would be injected
+ *   /lang-skills  - Show detected languages and matching skill paths
  *
  * Usage:
  * 1. Place this file in ~/.pi/agent/extensions/ (global) or .pi/extensions/ (project)
- * 2. Create language-specific skills in ~/.pi/agent/language-skills/ or .pi/language-skills/
- *    Named by convention: {language}/{topic}.md (e.g., rust/guidelines.md)
- * 3. The extension auto-detects languages and injects matching skill content.
+ * 2. Create language-specific skills in ~/.pi/agent/language-skills/
+ *    Named by convention: {language}-{topic}/SKILL.md
+ * 3. The extension auto-detects languages and exposes matching skills to Pi.
  */
 
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
@@ -107,100 +111,46 @@ function detectLanguages(cwd: string): string[] {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Skill discovery (non-standard path, not auto-scanned by Pi)        */
+/*  Skill source discovery                                             */
 /* ------------------------------------------------------------------ */
 
 interface FoundSkill {
 	name: string;        // e.g. "rust-guidelines"
 	language: string;    // e.g. "rust"
-	topic: string;       // e.g. "guidelines"
-	skillPath: string;   // absolute path
-	content: string;     // file contents
+	skillDir: string;    // absolute path to skill directory
 }
 
+const LANGUAGE_SKILLS_ROOT = path.join(os.homedir(), ".pi", "agent", "language-skills");
+
 /**
- * Scan a language-skills directory for skills matching detected languages.
- * Convention: {baseDir}/{language}/{topic}.md
+ * Scan the language-skills root for skills matching detected languages.
+ * Convention: {root}/{language}-{topic}/SKILL.md
  */
-function findLanguageSkills(baseDir: string, detectedLangs: string[]): FoundSkill[] {
+function findLanguageSkills(detectedLangs: string[]): FoundSkill[] {
 	const results: FoundSkill[] = [];
-	if (!dirExists(baseDir)) return results;
+	if (!dirExists(LANGUAGE_SKILLS_ROOT)) return results;
 
-	for (const lang of detectedLangs) {
-		const langDir = path.join(baseDir, lang);
-		if (!dirExists(langDir)) continue;
+	const entries = fs.readdirSync(LANGUAGE_SKILLS_ROOT, { withFileTypes: true });
+	for (const entry of entries) {
+		if (!entry.isDirectory()) continue;
 
-		const entries = fs.readdirSync(langDir, { withFileTypes: true });
-		for (const entry of entries) {
-			if (!entry.isFile()) continue;
-			if (!entry.name.endsWith(".md")) continue;
+		// Match naming convention: {language}-{topic} or just {language}
+		const match = detectedLangs.find((lang) =>
+			entry.name === lang || entry.name.startsWith(`${lang}-`)
+		);
+		if (!match) continue;
 
-			const topic = entry.name.replace(/\.md$/, "");
-			const skillPath = path.join(langDir, entry.name);
-			const content = fs.readFileSync(skillPath, "utf-8");
-			results.push({
-				name: `${lang}-${topic}`,
-				language: lang,
-				topic,
-				skillPath,
-				content,
-			});
-		}
+		const skillDir = path.join(LANGUAGE_SKILLS_ROOT, entry.name);
+		if (!fileExists(path.join(skillDir, "SKILL.md"))) continue;
+
+		results.push({
+			name: entry.name,
+			language: match,
+			skillDir,
+		});
 	}
 
 	return results;
-}
-
-function stripFrontmatter(text: string): string {
-	const lines = text.split("\n");
-	if (lines[0].trim() === "---") {
-		const end = lines.findIndex((l, i) => i > 0 && l.trim() === "---");
-		if (end !== -1) {
-			return lines.slice(end + 1).join("\n").trimStart();
-		}
-	}
-	return text;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Prompt builder (shared by command and event handler)               */
-/* ------------------------------------------------------------------ */
-
-function buildPromptSection(repoRoot: string, detectedLangs: string[]): string | null {
-	if (detectedLangs.length === 0) return null;
-
-	const searchPaths = [
-		path.join(repoRoot, ".pi", "language-skills"),
-		path.join(process.env.HOME ?? "", ".pi", "agent", "language-skills"),
-	];
-
-	const allSkills: FoundSkill[] = [];
-	for (const dir of searchPaths) {
-		allSkills.push(...findLanguageSkills(dir, detectedLangs));
-	}
-
-	if (allSkills.length === 0) return null;
-
-	// Deduplicate by skill name (project-local wins over global)
-	const byName = new Map<string, FoundSkill>();
-	for (const skill of allSkills) {
-		byName.set(skill.name, skill);
-	}
-	const uniqueSkills = Array.from(byName.values());
-
-	const sections: string[] = [];
-	for (const skill of uniqueSkills) {
-		const body = stripFrontmatter(skill.content);
-		sections.push(`## Skill: ${skill.name}\n\n${body}`);
-	}
-
-	return `
-## Repository Language Skills
-
-The following skills are active because their associated languages were detected in this workspace.
-
-${sections.join("\n\n---\n\n")}
-`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -215,46 +165,61 @@ export default function languageSkillsExtension(pi: ExtensionAPI) {
 		repoRoot = ctx.cwd;
 		detectedLangs = detectLanguages(repoRoot);
 
-		if (detectedLangs.length > 0) {
-			const list = detectedLangs
-				.map((l) => LANGUAGES.find((d) => d.name === l)?.display ?? l)
-				.join(", ");
-			ctx.ui.notify?.(`Languages detected: ${list}`, "info");
+		if (detectedLangs.length === 0) return;
+
+		const skills = findLanguageSkills(detectedLangs);
+		const displayNames = detectedLangs
+			.map((l) => LANGUAGES.find((d) => d.name === l)?.display ?? l)
+			.join(", ");
+
+		if (skills.length > 0) {
+			ctx.ui.notify?.(
+				`Languages: ${displayNames} — Skills: ${skills.map((s) => s.name).join(", ")}`,
+				"info",
+			);
+		} else {
+			ctx.ui.notify?.(`Languages: ${displayNames} — no skills found`, "info");
 		}
 	});
 
-	pi.on("before_agent_start", async (event) => {
-		const section = buildPromptSection(repoRoot, detectedLangs);
-		if (!section) return;
+	// Expose matching skills to Pi as regular skill directories
+	pi.on("resources_discover", async (event) => {
+		// Use event.cwd for reloads (may differ from original repoRoot)
+		const cwd = event.cwd;
+		const langs = detectLanguages(cwd);
+		const skills = findLanguageSkills(langs);
+
+		if (skills.length === 0) {
+			return { skillPaths: [] };
+		}
 
 		return {
-			systemPrompt: event.systemPrompt + section,
+			skillPaths: skills.map((s) => s.skillDir),
 		};
 	});
 
-	// Debug command: preview the injected prompt
+	// Debug command: show detected languages and matching skill paths
 	pi.registerCommand("lang-skills", {
-		description: "Preview the language skills prompt that would be injected",
+		description: "Show detected languages and matching language skill paths",
 		handler: async (_args, ctx) => {
 			if (detectedLangs.length === 0) {
 				ctx.ui.notify("No languages detected in this workspace.", "warning");
 				return;
 			}
 
-			const section = buildPromptSection(repoRoot, detectedLangs);
-			if (!section) {
-				ctx.ui.notify(`Languages detected (${detectedLangs.join(", ")}) but no matching skills found.`, "warning");
-				return;
-			}
-
+			const skills = findLanguageSkills(detectedLangs);
 			const lines = [
-				"**Language Skills Debug Output**",
+				"**Language Skills Status**",
 				"",
 				`Detected languages: ${detectedLangs.join(", ")}`,
 				"",
-				"---",
-				section,
-				"---",
+				"Matching skills:",
+				...(skills.length > 0
+					? skills.map((s) => `  - ${s.name} -> ${s.skillDir}`)
+					: ["  (none)"]),
+				"",
+				"Language skills root:",
+				`  ${LANGUAGE_SKILLS_ROOT}`,
 			];
 
 			pi.sendMessage(
