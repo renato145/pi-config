@@ -15,7 +15,6 @@ description: Rust coding standards, patterns, and project conventions. Use when 
 - Use `o` for an object in a iteration. Eg: `values.iter().map(|o| o*2)`
 - Use `i` for an index. Eg: `values.iter().enumerate().map(|(i,o)| (i,o*2))`
 - Use `k` and `v` for a key and value in structures like hashmaps. Eg: `some_hashmap.iter().map(|(k, v) ...|)`
-- When iterating use `o` as an abbreviation of object to name the variable in the iteration. Eg: `values.iter().map(|o| o*2)`
 - When mapping a single function use `x` for variables and `e` for errors. Eg: `some_result.map(|x| format!("x={x}")).map_err(|e| e.into())`
 
 ## Error Handling
