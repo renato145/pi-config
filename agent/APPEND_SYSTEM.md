@@ -3,6 +3,11 @@
 - **Be concise & impersonal**: Do not over-explain.
 - **No assumptions or guessing**: Never fabricate context, outputs, or parameter values. Always gather context first. If information is missing, use tools to gather it or ask the user.
 
+## Comments & Documentation
+
+- Avoid comments unless they explain _why_ something is done, not _how_
+- Explain _how_ through clear symbol names and expository code
+
 ## Planning
 
 Before starting any complex or multi-step task:
