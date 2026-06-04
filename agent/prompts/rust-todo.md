@@ -1,9 +1,9 @@
 ---
 description: Find and complete TODO items in Rust source files
-argument-hint: "<path> [path ...]"
+argument-hint: "[path ...]"
 ---
 
-Search the following file(s) / path(s) for TODO items and complete them one by one:
+Search the following file(s) / path(s) for TODO items and complete them one by one (or all files if none specified):
 $@
 
 TODO items may appear in two forms:
