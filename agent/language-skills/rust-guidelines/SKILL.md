@@ -5,36 +5,26 @@ description: Rust coding standards, patterns, and project conventions. Use when 
 
 # Rust Guidelines
 
+## Code style
+
+- Prefer functional coding style
+- Add TODO comments for features or nuances that were deemed not important to add, support, or implement right away
+- When iterating use `o` as an abbreviation of object to name the variable in the iteration. Eg: `values.iter().map(|o| o*2)`
+- When mapping a single function use `x` for variables and `e` for errors. Eg: `some_result.map(|x| format!("x={x}")).map_err(|e| e.into())`
+
 ## Error Handling
-- Use `Result<T, E>` everywhere. Never `unwrap()` or `expect()` in library code
+
 - Prefer `thiserror` for library errors, `anyhow` for application code
-- Use `?` to propagate errors; avoid manual `match` boilerplate when possible
-- Implement `std::error::Error` for custom error types
-
-## Async
-- Prefer `tokio` as the async runtime
-- Use `?` inside async functions freely
-- Prefer `tokio::sync::Mutex` over `std::sync::Mutex` across await points
-- Use `tokio::spawn` for fire-and-forget tasks; `tokio::join!` for concurrent awaits
-
-## Types & Traits
-- Derive `Debug`, `Clone`, `PartialEq` by default; opt out with comments if skipped
-- Use `#[derive(...)]` before manual `impl` blocks
-- Prefer `&str` over `String` in function parameters when no ownership is needed
-- Use `Into<String>` or `AsRef<str>` for flexible APIs only when justified
-
-## Safety & Unsafe
-- Minimize `unsafe` blocks; document every `unsafe` with a `// SAFETY:` comment
-- Keep `unsafe` blocks as small as possible; never wrap entire functions
-- Always assert preconditions explicitly before `unsafe` operations
+- For tracing error always use the syntax: `tracing::error!(error.cause_chain=?e, error.message=%e, "#ERROR_MESSAGE_HERE")`
 
 ## Testing
-- Unit tests live in `src/` inline (`#[cfg(test)] mod tests`)
-- Integration tests live in `tests/`
-- Use `tokio::test` for async tests
+
+- Prefer `nextest` for running tests
 - Prefer property-based testing with `proptest` for complex logic
+- If `googletest` crate is available, use it to assert tests
+- If `insta` crate is available, use it for snapshot testing if necessary
 
 ## Tooling
-- Run `cargo clippy` and `cargo fmt` before committing
-- Keep `Cargo.toml` dependencies sorted alphabetically within sections
-- Pin exact versions in `Cargo.lock`; use semver ranges in `Cargo.toml`
+
+- After making changes run `cargo clippy` and `cargo fmt`. If the repo have a justfile with a `checks`` command, run`just checks` instead.
+- When adding dependencies to Rust projects, use `cargo add`
