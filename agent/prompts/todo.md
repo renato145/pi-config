@@ -8,8 +8,8 @@ $@
 
 TODO items may appear in several forms depending on the language:
 
-- **Rust**: `// TODO: <description>`, `/* TODO: <description> */`, or `todo!("<description>")`
-- **Python**: `# TODO: <description>` or `""" TODO: <description> """`
+- **Rust**: `// TODO: <description>` or `todo!("<description>")`
+- **Python**: `# TODO: <description>`
 - **Bash**: `# TODO: <description>`
 - **JavaScript / TypeScript**: `// TODO: <description>` or `/* TODO: <description> */`
 
