@@ -36,3 +36,10 @@ description: Python coding standards, patterns, and project conventions. Use whe
 - Use Python 3.6+ f-strings for formatting
 - Use the ternary operator `x = y if a else b` for one-line conditionals
 - Keep functions pure when possible; avoid mutating arguments
+
+## Libraries
+
+When working with these libraries, fetch their llms.txt for up-to-date docs:
+
+- **nbdev**: <https://nbdev.fast.ai/llms.txt>
+- **fastcore**: <https://fastcore.fast.ai/llms.txt>
