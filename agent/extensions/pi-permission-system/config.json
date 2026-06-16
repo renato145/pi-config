@@ -13,6 +13,12 @@
       "*.env.*": "deny",
       "*.env.example": "allow"
     },
+    "skill": {
+      "*": "ask",
+      "javascript-guidelines": "allow",
+      "python-guidelines": "allow",
+      "rust-guidelines": "allow"
+    },
     "read": "allow",
     "write": "ask",
     "edit": "ask",
