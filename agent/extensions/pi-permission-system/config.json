@@ -35,6 +35,7 @@
       "sort *": "allow",
       "ls *": "allow",
       "cat *": "allow",
+      "echo *": "allow",
       "grep *": "allow",
       "rg *": "allow",
       "head *": "allow",
