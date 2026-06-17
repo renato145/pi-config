@@ -43,3 +43,11 @@ When working with these libraries, fetch their llms.txt for up-to-date docs:
 
 - **nbdev**: <https://nbdev.fast.ai/llms.txt>
 - **fastcore**: <https://fastcore.fast.ai/llms.txt>
+
+## Notebooks with nbdev
+
+On projects using `nbdev` notebooks are the source of truth:
+
+- we can careful edit python files and then run `nbdev-update` to update notebooks
+- edit python files, no notebook files `nbs/*.ipynb`
+- avoid reading notebook files
