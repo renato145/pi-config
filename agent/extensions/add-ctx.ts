@@ -128,7 +128,11 @@ async function addContexts(names: string[], config: Config, ctx: ExtensionContex
 					display: true,
 					details: { name, source: origin },
 				},
-				{ deliverAs: "nextTurn" },
+				// When idle, omit deliverAs so pi injects the message into the
+				// session immediately (appendCustomMessageEntry + message_start/
+				// message_end) and renders it right away. While streaming, queue
+				// it as a follow-up so it lands after the current turn.
+				ctx.isIdle() ? undefined : { deliverAs: "followUp" },
 			);
 			ctx.ui.notify(`Added context "${name}" (${content.length} bytes from ${origin})`, "info");
 		} catch (e) {
