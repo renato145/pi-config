@@ -1,12 +1,12 @@
 {
-  "lastChangelogVersion": "0.79.6",
+  "lastChangelogVersion": "0.79.10",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system"
   ],
   "hideThinkingBlock": true,
   "defaultProvider": "opencode-go",
-  "defaultModel": "kimi-k2.7-code",
+  "defaultModel": "glm-5.2",
   "defaultThinkingLevel": "medium",
   "theme": "dark"
 }
