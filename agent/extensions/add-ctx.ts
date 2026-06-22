@@ -22,13 +22,15 @@
  *   Tab after /add-ctx                autocomplete from config keys
  *
  * The resolved content is injected as a persistent custom message that
- * participates in LLM context on subsequent turns.
+ * participates in LLM context on subsequent turns. In the TUI it renders
+ * collapsed (name + size + source) by default; toggle `app.tools.expand`
+ * (ctrl+o) to show the full content.
  */
 
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext, MessageRenderer, Theme } from "@earendil-works/pi-coding-agent";
+import { getMarkdownTheme, keyHint } from "@earendil-works/pi-coding-agent";
 import type { Component, Focusable, KeybindingsManager, TUI } from "@earendil-works/pi-tui";
-import { Container, fuzzyFilter, Input, Spacer, Text } from "@earendil-works/pi-tui";
-import type { Theme } from "@earendil-works/pi-coding-agent";
+import { Box, Container, fuzzyFilter, Input, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
@@ -36,6 +38,18 @@ import { isAbsolute, join, resolve } from "node:path";
 const GLOBAL_CONFIG = join(homedir(), ".pi", "agent", "config", "add-ctx.json");
 const PROJECT_CONFIG = ".pi/add-ctx.json";
 const CUSTOM_TYPE = "add-ctx";
+
+interface AddCtxDetails {
+	name: string;
+	source: string;
+	bytes: number;
+}
+
+function formatBytes(n: number): string {
+	if (n < 1024) return `${n} B`;
+	if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KiB`;
+	return `${(n / (1024 * 1024)).toFixed(1)} MiB`;
+}
 
 type Config = Record<string, string>;
 
@@ -112,6 +126,42 @@ function formatEntry(name: string, origin: string, content: string): string {
 	return `<added-context name="${name}" source="${origin}">\n${content}\n</added-context>`;
 }
 
+/** Custom TUI renderer for add-ctx messages: collapsed summary by default, full content on expand. */
+const addCtxRenderer: MessageRenderer<AddCtxDetails> = (message, options, theme) => {
+	const details = (message.details ?? {}) as AddCtxDetails;
+	const name = details.name ?? "context";
+	const source = details.source ?? "";
+	const bytes = details.bytes;
+
+	const label = theme.fg("customMessageLabel", `\x1b[1m[${CUSTOM_TYPE}]\x1b[22m`);
+	const meta = theme.fg(
+		"muted",
+		`(${bytes != null ? `${formatBytes(bytes)} from ` : ""}${source})`,
+	);
+	const summary = `${label} ${theme.fg("customMessageText", name)} ${meta}`;
+
+	const box = new Box(1, 1, (t) => theme.bg("customMessageBg", t));
+	box.addChild(new Text(summary, 0, 0));
+	box.addChild(new Spacer(1));
+	box.addChild(
+		new Text(
+		options.expanded ? keyHint("app.tools.expand", "to hide") : keyHint("app.tools.expand", "to show content"),
+			0,
+			0,
+		),
+	);
+
+	if (!options.expanded) return box;
+
+	box.addChild(new Spacer(1));
+	const text =
+		typeof message.content === "string"
+			? message.content
+			: message.content.filter((c) => c.type === "text").map((c) => c.text).join("\n");
+	box.addChild(new Markdown(text, 0, 0, getMarkdownTheme(), { color: (t) => theme.fg("customMessageText", t) }));
+	return box;
+};
+
 function entriesOf(config: Config): CtxEntry[] {
 	return Object.entries(config).map(([name, source]) => ({ name, source }));
 }
@@ -126,7 +176,7 @@ async function addContexts(names: string[], config: Config, ctx: ExtensionContex
 					customType: CUSTOM_TYPE,
 					content: formatEntry(name, origin, content),
 					display: true,
-					details: { name, source: origin },
+					details: { name, source: origin, bytes: content.length } as AddCtxDetails,
 				},
 				// When idle, omit deliverAs so pi injects the message into the
 				// session immediately (appendCustomMessageEntry + message_start/
@@ -275,6 +325,8 @@ class ContextSelector extends Container implements Component, Focusable {
 }
 
 export default function addCtxExtension(pi: ExtensionAPI) {
+	pi.registerMessageRenderer(CUSTOM_TYPE, addCtxRenderer);
+
 	pi.on("session_start", async (_event, ctx) => {
 		cachedConfig = await loadConfig(ctx);
 	});
