@@ -43,6 +43,7 @@ When working with these libraries, fetch their llms.txt for up-to-date docs:
 
 - **nbdev**: <https://nbdev.fast.ai/llms.txt>
 - **fastcore**: <https://fastcore.fast.ai/llms.txt>
+- **fasthtml**: <https://www.fastht.ml/docs/llms.txt>
 
 ## Notebooks with nbdev
 
