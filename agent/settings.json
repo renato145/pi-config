@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.79.10",
+  "lastChangelogVersion": "0.80.1",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system"
@@ -7,6 +7,6 @@
   "hideThinkingBlock": true,
   "defaultProvider": "opencode-go",
   "defaultModel": "glm-5.2",
-  "defaultThinkingLevel": "medium",
+  "defaultThinkingLevel": "high",
   "theme": "dark"
 }
