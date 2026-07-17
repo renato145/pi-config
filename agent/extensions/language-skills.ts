@@ -116,16 +116,24 @@ function scanDirForMarkers(dir: string): Set<string> {
   if (!dirExists(dir)) return found;
 
   const entries = fs.readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (!entry.isFile()) continue;
-    for (const lang of LANGUAGES) {
-      for (const marker of lang.markers) {
-        if (
-          marker.startsWith(".")
-            ? entry.name.endsWith(marker)
-            : entry.name === marker
-        ) {
+  for (const lang of LANGUAGES) {
+    for (const marker of lang.markers) {
+      // Nested marker paths (e.g. src/__init__.py) are checked relative to dir.
+      if (marker.includes(path.sep) || marker.includes("/")) {
+        if (fileExists(path.join(dir, marker))) {
           found.add(lang.name);
+        }
+        continue;
+      }
+
+      for (const entry of entries) {
+        if (!entry.isFile()) continue;
+        const matches = marker.startsWith(".")
+          ? entry.name.endsWith(marker)
+          : entry.name === marker;
+        if (matches) {
+          found.add(lang.name);
+          break;
         }
       }
     }
