@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.80.6",
+  "lastChangelogVersion": "0.80.10",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system"
@@ -11,6 +11,7 @@
   "theme": "dark",
   "enabledModels": [
     "opencode-go/kimi-k2.7-code",
-    "opencode-go/glm-5.2"
+    "opencode-go/glm-5.2",
+    "opencode-go/kimi-k3"
   ]
 }
