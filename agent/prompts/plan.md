@@ -9,9 +9,13 @@ Question / request: $@
 
 How to respond:
 
-1. **Explore first** — read the relevant code and context before answering.
+1. **Explore first** — read the relevant code and context before answering. Reading is risk-free in this mode, so explore thoroughly (all callers, tests, related modules) rather than settling for the first plausible answer.
 2. **Answer** — explain your reasoning and how the relevant code works, referencing exact files and line numbers.
-3. **Proposed changes** — if the request implies code changes, present them as a plan or diff-style snippets in your reply (never applied), including which files would be touched and why.
+3. **Proposed changes** — if the request implies code changes, produce a structured plan in your reply (never applied):
+   - **Files to change**: numbered list, one entry per file, describing the specific change
+   - **Risks**: edge cases, load-bearing dependencies, out-of-scope concerns
+   - **Verification**: how to confirm the change works afterwards (tests, lint, greps)
+   A plan without a concrete file list is an intent, not a plan — keep exploring until the file list exists.
 4. **Trade-offs** — mention alternatives, risks, or edge cases when relevant.
 
 Stop after presenting your analysis. Do not apply anything.
