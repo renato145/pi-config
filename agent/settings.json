@@ -2,7 +2,8 @@
   "lastChangelogVersion": "0.80.10",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
-    "npm:@gotgenes/pi-permission-system"
+    "npm:@gotgenes/pi-permission-system",
+    "npm:pi-edit-session-in-place"
   ],
   "hideThinkingBlock": true,
   "defaultProvider": "opencode-go",
