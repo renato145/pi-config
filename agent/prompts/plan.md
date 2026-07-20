@@ -14,4 +14,6 @@ How to respond:
 3. **Proposed changes** — if the request implies code changes, present them as a plan or diff-style snippets in your reply (never applied), including which files would be touched and why.
 4. **Trade-offs** — mention alternatives, risks, or edge cases when relevant.
 
-Stop after presenting your analysis. Do not apply anything unless I explicitly ask you to in a follow-up message.
+Stop after presenting your analysis. Do not apply anything.
+
+Exit condition: this read-only mode ends only when I invoke /plan-finish. Until then, keep proposing, never edit.
