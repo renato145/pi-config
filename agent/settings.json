@@ -1,18 +1,18 @@
 {
-  "lastChangelogVersion": "0.80.10",
+  "lastChangelogVersion": "0.84.1",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system",
     "npm:pi-edit-session-in-place"
   ],
   "hideThinkingBlock": true,
-  "defaultProvider": "opencode-go",
+  "defaultProvider": "opencode",
   "defaultModel": "kimi-k2.7-code",
   "defaultThinkingLevel": "high",
   "theme": "dark",
   "enabledModels": [
-    "opencode-go/kimi-k2.7-code",
-    "opencode-go/glm-5.2",
-    "opencode-go/kimi-k3"
+    "opencode/kimi-k2.7-code",
+    "opencode/kimi-k3",
+    "opencode/glm-5.2"
   ]
 }
