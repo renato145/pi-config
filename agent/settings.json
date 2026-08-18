@@ -1,9 +1,15 @@
 {
-  "lastChangelogVersion": "0.84.1",
+  "lastChangelogVersion": "0.84.2",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system",
-    "npm:pi-edit-session-in-place"
+    {
+      "source": "npm:pi-edit-session-in-place",
+      "extensions": [
+        "-extensions/edit-session-in-place.ts"
+      ]
+    },
+    "npm:@juicesharp/rpiv-ask-user-question"
   ],
   "hideThinkingBlock": true,
   "defaultProvider": "opencode",
