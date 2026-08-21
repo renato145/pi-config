@@ -9,16 +9,18 @@
         "-extensions/edit-session-in-place.ts"
       ]
     },
-    "npm:@juicesharp/rpiv-ask-user-question"
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:pi-scoped-models-extra-info"
   ],
   "hideThinkingBlock": true,
   "defaultProvider": "opencode",
-  "defaultModel": "kimi-k2.7-code",
-  "defaultThinkingLevel": "high",
+  "defaultModel": "deepseek-v4-pro",
+  "defaultThinkingLevel": "max",
   "theme": "dark",
   "enabledModels": [
     "opencode/kimi-k2.7-code",
     "opencode/kimi-k3",
-    "opencode/glm-5.2"
+    "opencode/glm-5.2",
+    "opencode/deepseek-v4-pro"
   ]
 }
