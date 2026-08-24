@@ -2,3 +2,5 @@
 /agent/extensions/pi-permission-system/logs
 /agent/node_modules
 /agent/bun.lock
+/agent/models-store.json
+/agent/trust.json
