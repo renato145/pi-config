@@ -28,15 +28,15 @@
  */
 
 import type { ExtensionAPI, ExtensionContext, MessageRenderer, Theme } from "@earendil-works/pi-coding-agent";
-import { getMarkdownTheme, keyHint } from "@earendil-works/pi-coding-agent";
+import { CONFIG_DIR_NAME, getMarkdownTheme, keyHint } from "@earendil-works/pi-coding-agent";
 import type { Component, Focusable, KeybindingsManager, TUI } from "@earendil-works/pi-tui";
 import { Box, Container, fuzzyFilter, Input, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 
-const GLOBAL_CONFIG = join(homedir(), ".pi", "agent", "config", "add-ctx.json");
-const PROJECT_CONFIG = ".pi/add-ctx.json";
+const GLOBAL_CONFIG = join(homedir(), CONFIG_DIR_NAME, "agent", "config", "add-ctx.json");
+const PROJECT_CONFIG = `${CONFIG_DIR_NAME}/add-ctx.json`;
 const CUSTOM_TYPE = "add-ctx";
 
 interface AddCtxDetails {
@@ -74,21 +74,10 @@ async function readJsonFile(path: string): Promise<Config> {
 	return {};
 }
 
-/** Run mode: "tui" | "rpc" | "json" | "print". Exists at runtime but not on every ExtensionContext type revision. */
-function runMode(ctx: ExtensionContext): string {
-	return (ctx as { mode?: string }).mode ?? "print";
-}
-
-/** `isProjectTrusted` exists at runtime but is not on every ExtensionContext type revision. */
-function projectTrusted(ctx: ExtensionContext): boolean {
-	const fn = (ctx as { isProjectTrusted?: () => boolean }).isProjectTrusted;
-	return fn ? fn() : true;
-}
-
 async function loadConfig(ctx: ExtensionContext): Promise<Config> {
 	const globalCfg = await readJsonFile(GLOBAL_CONFIG);
 	const projectPath = isAbsolute(PROJECT_CONFIG) ? PROJECT_CONFIG : resolve(ctx.cwd, PROJECT_CONFIG);
-	const projectCfg = projectTrusted(ctx) ? await readJsonFile(projectPath) : {};
+	const projectCfg = ctx.isProjectTrusted() ? await readJsonFile(projectPath) : {};
 	return { ...globalCfg, ...projectCfg };
 }
 
@@ -108,7 +97,7 @@ async function resolveContent(source: string, cwd: string): Promise<{ content: s
 	}
 
 	// Local file: try cwd-relative first, then config-dir-relative, then absolute.
-	const candidates = [resolve(cwd, source), resolve(join(homedir(), ".pi", "agent", "config"), source)];
+	const candidates = [resolve(cwd, source), resolve(join(homedir(), CONFIG_DIR_NAME, "agent", "config"), source)];
 	if (isAbsolute(source)) candidates.unshift(source);
 
 	let lastErr: unknown;
@@ -349,13 +338,13 @@ export default function addCtxExtension(pi: ExtensionAPI) {
 				const entries = entriesOf(config);
 				if (entries.length === 0) {
 					ctx.ui.notify(
-						`No contexts configured. Create ${GLOBAL_CONFIG} or .pi/add-ctx.json with {"name": "path-or-url"}`,
+						`No contexts configured. Create ${GLOBAL_CONFIG} or ${PROJECT_CONFIG} with {"name": "path-or-url"}`,
 						"warning",
 					);
 					return;
 				}
 
-				if (runMode(ctx) === "tui") {
+				if (ctx.mode === "tui") {
 					// Fuzzy-search picker mirroring /model.
 					const choice = await ctx.ui.custom<string | undefined>(
 						(tui, theme, keybindings, done) =>
