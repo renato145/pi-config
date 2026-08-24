@@ -1,3 +1,20 @@
+/**
+ * Commit Extensions
+ *
+ * Commands to generate conventional commit messages with the LLM and
+ * commit after user review.
+ *
+ * Commands:
+ *   /commit [scope]        - message based on the latest changes the agent made in this session
+ *   /diff-commit [scope]   - message based on the staged diff (falls back to unstaged)
+ *
+ * Flow (both commands):
+ * 1. Send a prompt asking for a conventional commit message.
+ * 2. When the agent settles, take the last assistant message as the proposal.
+ * 3. Open it in the editor for review/adjustment (Esc cancels).
+ * 4. Run `git commit -m <message>` in the current working directory.
+ */
+
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 function extractText(content: unknown): string {
@@ -25,6 +42,13 @@ function stripMarkdownCodeBlocks(text: string): string {
   text = text.replace(/^`+|`+$/g, "");
   return text.trim();
 }
+
+const COMMIT_RULES =
+  `Rules:\n` +
+  `- Type: feat, fix, docs, style, refactor, perf, test, or chore\n` +
+  `- Subject: imperative mood, lowercase, no period, max 50 chars\n` +
+  `- Body: only if the "why" isn't obvious, wrap at 72 chars\n` +
+  `- Do not include a "Signed-off-by" line unless requested\n`;
 
 type PendingCommit = { cwd: string } | null;
 
@@ -99,11 +123,46 @@ export default function (pi: ExtensionAPI) {
 
       const prompt =
         `Write a concise conventional commit message for the latest changes you made.\n\n` +
-        `Rules:\n` +
         `- Format: type: subject\n` +
-        `- Type: feat, fix, docs, style, refactor, perf, test, or chore\n` +
-        `- Subject: imperative mood, lowercase, no period, max 50 chars\n` +
-        `- Body: only if the "why" isn't obvious, wrap at 72 chars`;
+        COMMIT_RULES;
+
+      pendingCommit = { cwd: ctx.cwd };
+      pi.sendUserMessage(prompt);
+    },
+  });
+
+  pi.registerCommand("diff-commit", {
+    description: "Write a git commit message from staged changes",
+    handler: async (args, ctx) => {
+      if (!ctx.isIdle()) {
+        ctx.ui.notify("Agent is busy", "warning");
+        return;
+      }
+
+      let diffResult = await pi.exec("git", ["diff", "--cached"], {
+        cwd: ctx.cwd,
+      });
+      let source = "staged";
+
+      if (!diffResult.stdout.trim()) {
+        diffResult = await pi.exec("git", ["diff"], { cwd: ctx.cwd });
+        source = "unstaged";
+
+        if (!diffResult.stdout.trim()) {
+          ctx.ui.notify("No changes to commit", "info");
+          return;
+        }
+      }
+
+      const scope = args.trim()
+        ? `scope: ${args.trim()}`
+        : "infer the scope from the changes";
+
+      const prompt =
+        `Write a concise conventional commit message for these ${source} changes.\n\n` +
+        `- Format: type(${scope}): subject\n` +
+        COMMIT_RULES +
+        `\n\`\`\`diff\n${diffResult.stdout}\n\`\`\``;
 
       pendingCommit = { cwd: ctx.cwd };
       pi.sendUserMessage(prompt);
