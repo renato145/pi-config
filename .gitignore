@@ -1,3 +1,4 @@
 /agent/sessions
 /agent/extensions/pi-permission-system/logs
 /agent/node_modules
+/agent/bun.lock
