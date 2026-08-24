@@ -13,6 +13,7 @@
     "npm:pi-scoped-models-extra-info"
   ],
   "hideThinkingBlock": true,
+  "enableSkillCommands": true,
   "defaultProvider": "opencode",
   "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "max",

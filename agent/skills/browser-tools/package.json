@@ -1,0 +1,23 @@
+{
+  "name": "browser-tools",
+  "version": "2.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Visible, user-intervenable browser automation over a local Chrome DevTools Protocol connection",
+  "author": "Mario Zechner; local hardening for pi",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "check": "node --check browser-common.js && node --check browser-profile.js && node --check browser-start.js && node --check browser-status.js && node --check browser-stop.js && node --check browser-tabs.js && node --check browser-nav.js && node --check browser-eval.js && node --check browser-content.js && node --check browser-cookies.js && node --check browser-screenshot.js && node --check browser-pick.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "jsdom": "^30.0.1",
+    "puppeteer-core": "^25.8.0",
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2"
+  }
+}

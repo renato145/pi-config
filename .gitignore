@@ -4,3 +4,4 @@
 /agent/bun.lock
 /agent/models-store.json
 /agent/trust.json
+/agent/skills/browser-tools/node_modules
