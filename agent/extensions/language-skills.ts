@@ -25,10 +25,10 @@
  * 3. The extension auto-detects languages and exposes matching skills to Pi.
  */
 
-import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { statSync, readdirSync } from "node:fs";
+import { homedir } from "node:os";
+import { join, sep } from "node:path";
+import { CONFIG_DIR_NAME, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 /* ------------------------------------------------------------------ */
 /*  Language detection heuristics                                      */
@@ -97,7 +97,7 @@ const LANGUAGES: LanguageDef[] = [
 
 function dirExists(p: string): boolean {
   try {
-    return fs.statSync(p).isDirectory();
+    return statSync(p).isDirectory();
   } catch {
     return false;
   }
@@ -105,7 +105,7 @@ function dirExists(p: string): boolean {
 
 function fileExists(p: string): boolean {
   try {
-    return fs.statSync(p).isFile();
+    return statSync(p).isFile();
   } catch {
     return false;
   }
@@ -115,12 +115,12 @@ function scanDirForMarkers(dir: string): Set<string> {
   const found = new Set<string>();
   if (!dirExists(dir)) return found;
 
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const entries = readdirSync(dir, { withFileTypes: true });
   for (const lang of LANGUAGES) {
     for (const marker of lang.markers) {
       // Nested marker paths (e.g. src/__init__.py) are checked relative to dir.
-      if (marker.includes(path.sep) || marker.includes("/")) {
-        if (fileExists(path.join(dir, marker))) {
+      if (marker.includes(sep) || marker.includes("/")) {
+        if (fileExists(join(dir, marker))) {
           found.add(lang.name);
         }
         continue;
@@ -148,10 +148,10 @@ function detectLanguages(cwd: string): string[] {
   for (const lang of scanDirForMarkers(cwd)) found.add(lang);
 
   // One level deep (monorepo packages/)
-  const entries = fs.readdirSync(cwd, { withFileTypes: true });
+  const entries = readdirSync(cwd, { withFileTypes: true });
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      for (const lang of scanDirForMarkers(path.join(cwd, entry.name)))
+      for (const lang of scanDirForMarkers(join(cwd, entry.name)))
         found.add(lang);
     }
   }
@@ -174,9 +174,9 @@ interface FoundSkill {
   skillDir: string; // absolute path to skill directory
 }
 
-const LANGUAGE_SKILLS_ROOT = path.join(
-  os.homedir(),
-  ".pi",
+const LANGUAGE_SKILLS_ROOT = join(
+  homedir(),
+  CONFIG_DIR_NAME,
   "agent",
   "language-skills",
 );
@@ -189,7 +189,7 @@ function findLanguageSkills(detectedLangs: string[]): FoundSkill[] {
   const results: FoundSkill[] = [];
   if (!dirExists(LANGUAGE_SKILLS_ROOT)) return results;
 
-  const entries = fs.readdirSync(LANGUAGE_SKILLS_ROOT, { withFileTypes: true });
+  const entries = readdirSync(LANGUAGE_SKILLS_ROOT, { withFileTypes: true });
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
 
@@ -199,8 +199,8 @@ function findLanguageSkills(detectedLangs: string[]): FoundSkill[] {
     );
     if (!match) continue;
 
-    const skillDir = path.join(LANGUAGE_SKILLS_ROOT, entry.name);
-    if (!fileExists(path.join(skillDir, "SKILL.md"))) continue;
+    const skillDir = join(LANGUAGE_SKILLS_ROOT, entry.name);
+    if (!fileExists(join(skillDir, "SKILL.md"))) continue;
 
     results.push({
       name: entry.name,
@@ -232,12 +232,12 @@ export default function languageSkillsExtension(pi: ExtensionAPI) {
       .join(", ");
 
     if (skills.length > 0) {
-      ctx.ui.notify?.(
+      ctx.ui.notify(
         `Languages: ${displayNames} — Skills: ${skills.map((s) => s.name).join(", ")}`,
         "info",
       );
     } else {
-      ctx.ui.notify?.(`Languages: ${displayNames} — no skills found`, "info");
+      ctx.ui.notify(`Languages: ${displayNames} — no skills found`, "info");
     }
   });
 
