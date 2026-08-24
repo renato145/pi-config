@@ -14,7 +14,7 @@
   ],
   "hideThinkingBlock": true,
   "defaultProvider": "opencode",
-  "defaultModel": "deepseek-v4-pro",
+  "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "max",
   "theme": "dark",
   "enabledModels": [
@@ -22,6 +22,7 @@
     "opencode/kimi-k3",
     "opencode/glm-5.2",
     "opencode/deepseek-v4-pro",
-    "opencode/deepseek-v4-flash"
+    "opencode/deepseek-v4-flash",
+    "opencode/gpt-5.6-sol"
   ]
 }
