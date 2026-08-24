@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.84.2",
+  "lastChangelogVersion": "0.84.3",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system",
@@ -21,6 +21,7 @@
     "opencode/kimi-k2.7-code",
     "opencode/kimi-k3",
     "opencode/glm-5.2",
-    "opencode/deepseek-v4-pro"
+    "opencode/deepseek-v4-pro",
+    "opencode/deepseek-v4-flash"
   ]
 }
