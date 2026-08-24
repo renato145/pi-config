@@ -16,6 +16,7 @@
     },
     "skill": {
       "*": "ask",
+      "browser-tools": "ask",
       "javascript-guidelines": "allow",
       "python-guidelines": "allow",
       "rust-guidelines": "allow"
@@ -58,8 +59,15 @@
       "cargo clippy*": "allow",
       "cargo fmt*": "allow",
       "mkdir *": "ask",
-      "touch *": "ask"
+      "touch *": "ask",
+      "sleep *": "allow",
+      "~/.pi/agent/skills/browser-tools/browser-*.js *": "allow",
+      "~/.pi/agent/skills/browser-tools/browser-start.js *--*profile*": "ask",
+      "~/.pi/agent/skills/browser-tools/browser-eval.js *--allow-sensitive*": "ask"
     },
-    "external_directory": "ask"
+    "external_directory": {
+      "*": "ask",
+      "~/.pi/agent/skills/browser-tools/*": "allow"
+    }
   }
 }
