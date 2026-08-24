@@ -3,7 +3,7 @@ description: Exit read-only mode and start executing the plan, persisting it to 
 argument-hint: "[extra instructions]"
 ---
 
-READ-ONLY MODE IS OVER. The plan discussed so far is now approved — begin executing it.
+READ-ONLY MODE IS OVER. The plan discussed so far is now approved.
 
 Before doing anything else, persist the plan so it can be tracked:
 
