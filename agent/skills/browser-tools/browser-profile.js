@@ -1,74 +1,10 @@
-import { accessSync, chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { accessSync, existsSync, lstatSync, readdirSync, readlinkSync, rmSync, writeFileSync } from "node:fs";
 import { constants as fsConstants } from "node:fs";
-import { spawnSync } from "node:child_process";
 import { homedir } from "node:os";
-import { basename, dirname, join } from "node:path";
+import { join } from "node:path";
 import { ensurePrivateDirectory, isProcessAlive } from "./browser-common.js";
 
-const PROFILE_EXCLUDES = [
-	"Cache/",
-	"Code Cache/",
-	"GPUCache/",
-	"GrShaderCache/",
-	"Sessions/",
-	"Current Session",
-	"Current Tabs",
-	"Last Session",
-	"Last Tabs",
-	"Login Data*",
-	"History*",
-	"Web Data*",
-	"Top Sites*",
-	"Visited Links",
-	"Shortcuts*",
-	"Favicons*",
-	"Download Metadata",
-	"Bookmarks*",
-	"Extensions/",
-	"Extension State/",
-	"Extension Rules/",
-	"Extension Scripts/",
-	"Extension Cookies/",
-	"Local Extension Settings/",
-	"Managed Extension Settings/",
-	"Sync Extension Settings/",
-	"Service Worker/CacheStorage/",
-];
-
-export function chromeUserDataDirectory({ platform = process.platform, home = homedir() } = {}) {
-	if (platform === "darwin") return join(home, "Library", "Application Support", "Google", "Chrome");
-	if (platform === "linux") return join(home, ".config", "google-chrome");
-	if (platform === "win32") {
-		const localAppData = process.env.LOCALAPPDATA;
-		if (!localAppData) throw new Error("LOCALAPPDATA is not set.");
-		return join(localAppData, "Google", "Chrome", "User Data");
-	}
-	throw new Error(`Unsupported platform: ${platform}`);
-}
-
-export function validateProfileDirectoryName(value) {
-	if (!value || value === "." || value === ".." || basename(value) !== value || value.includes("/") || value.includes("\\")) {
-		throw new Error(`Invalid Chrome profile directory: ${value}`);
-	}
-	return value;
-}
-
-export function defaultProfileDirectory(sourceRoot) {
-	try {
-		const localState = JSON.parse(readFileSync(join(sourceRoot, "Local State"), "utf8"));
-		const lastUsed = localState?.profile?.last_used;
-		if (typeof lastUsed === "string") return validateProfileDirectoryName(lastUsed);
-	} catch {}
-	return "Default";
-}
-
-export function copiedProfileDirectory(dataDir) {
-	try {
-		return validateProfileDirectoryName(readFileSync(join(dataDir, ".browser-tools-profile"), "utf8").trim());
-	} catch {
-		return undefined;
-	}
-}
+const DEDICATED_PROFILE_MARKER = ".browser-tools-dedicated-profile";
 
 export function chromeBinaryCandidates({ platform = process.platform, home = homedir() } = {}) {
 	const configured = process.env.BROWSER_TOOLS_CHROME;
@@ -98,6 +34,16 @@ export function findChromeBinary(options) {
 	throw new Error("Chrome was not found. Set BROWSER_TOOLS_CHROME to its executable path.");
 }
 
+export function ensureDedicatedProfile(dataDir) {
+	ensurePrivateDirectory(dataDir);
+	const marker = join(dataDir, DEDICATED_PROFILE_MARKER);
+	if (existsSync(marker)) return;
+	if (readdirSync(dataDir).length > 0) {
+		throw new Error("Refusing to launch an unmarked Chrome profile. Browser-tools requires its own dedicated profile.");
+	}
+	writeFileSync(marker, "Dedicated browser-tools profile. Do not replace with a normal Chrome profile.\n", { mode: 0o600 });
+}
+
 function pathExistsWithoutFollowingLinks(path) {
 	try {
 		lstatSync(path);
@@ -121,76 +67,9 @@ export function clearStaleBrowserLocks(dataDir) {
 	const lockPath = join(dataDir, "SingletonLock");
 	if (!pathExistsWithoutFollowingLinks(lockPath)) return;
 	const pid = lockPid(lockPath);
-	if (pid === undefined) {
-		throw new Error("The browser profile has a lock that cannot be verified; refusing to remove it.");
-	}
+	if (pid === undefined) throw new Error("The browser profile has a lock that cannot be verified; refusing to remove it.");
 	if (isProcessAlive(pid)) throw new Error(`The browser profile is locked by process ${pid}; stop that browser first.`);
 	for (const name of ["SingletonLock", "SingletonSocket", "SingletonCookie"]) {
 		rmSync(join(dataDir, name), { force: true });
-	}
-}
-
-export function assertSourceProfileClosed(sourceRoot) {
-	for (const name of ["SingletonLock", "SingletonSocket", "SingletonCookie"]) {
-		if (pathExistsWithoutFollowingLinks(join(sourceRoot, name))) {
-			throw new Error("Your normal Chrome profile appears to be in use. Close normal Chrome before syncing it.");
-		}
-	}
-}
-
-export function profileCopyArguments({ sourceProfile, destinationProfile }) {
-	return [
-		"-a",
-		...PROFILE_EXCLUDES.flatMap((pattern) => ["--exclude", pattern]),
-		`${sourceProfile}/`,
-		`${destinationProfile}/`,
-	];
-}
-
-function hasExistingProfile(dataDir) {
-	if (!existsSync(dataDir)) return false;
-	try {
-		return readdirSync(dataDir).length > 0;
-	} catch {
-		return true;
-	}
-}
-
-export function syncChromeProfile({ sourceRoot, destinationRoot, profileDirectory, replace = false }) {
-	validateProfileDirectoryName(profileDirectory);
-	assertSourceProfileClosed(sourceRoot);
-	const sourceProfile = join(sourceRoot, profileDirectory);
-	if (!existsSync(sourceProfile)) throw new Error(`Chrome profile does not exist: ${profileDirectory}`);
-	if (hasExistingProfile(destinationRoot) && !replace) {
-		throw new Error("A browser-tools profile already exists. Syncing would overwrite its sessions; explicit replacement is required.");
-	}
-
-	const parent = dirname(destinationRoot);
-	mkdirSync(parent, { recursive: true });
-	const stage = `${destinationRoot}.sync-${process.pid}-${Date.now()}`;
-	const backup = `${destinationRoot}.backup-${process.pid}-${Date.now()}`;
-	ensurePrivateDirectory(stage);
-	const stagedProfile = join(stage, profileDirectory);
-	mkdirSync(stagedProfile, { recursive: true, mode: 0o700 });
-
-	try {
-		const localState = join(sourceRoot, "Local State");
-		if (existsSync(localState)) copyFileSync(localState, join(stage, "Local State"));
-		const result = spawnSync("rsync", profileCopyArguments({ sourceProfile, destinationProfile: stagedProfile }), {
-			encoding: "utf8",
-			stdio: ["ignore", "pipe", "pipe"],
-		});
-		if (result.error) throw result.error;
-		if (result.status !== 0) throw new Error(result.stderr.trim() || `rsync exited with code ${result.status}`);
-		writeFileSync(join(stage, ".browser-tools-profile"), `${profileDirectory}\n`, { mode: 0o600 });
-
-		if (existsSync(destinationRoot)) renameSync(destinationRoot, backup);
-		renameSync(stage, destinationRoot);
-		chmodSync(destinationRoot, 0o700);
-		rmSync(backup, { recursive: true, force: true });
-	} catch (error) {
-		rmSync(stage, { recursive: true, force: true });
-		if (!existsSync(destinationRoot) && existsSync(backup)) renameSync(backup, destinationRoot);
-		throw error;
 	}
 }

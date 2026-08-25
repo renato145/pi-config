@@ -1,36 +1,8 @@
 import assert from "node:assert/strict";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import test from "node:test";
-import {
-	chromeBinaryCandidates,
-	chromeUserDataDirectory,
-	profileCopyArguments,
-	validateProfileDirectoryName,
-} from "../browser-profile.js";
-
-test("chromeUserDataDirectory resolves supported platforms", () => {
-	assert.equal(chromeUserDataDirectory({ platform: "linux", home: "/home/test" }), "/home/test/.config/google-chrome");
-	assert.equal(
-		chromeUserDataDirectory({ platform: "darwin", home: "/Users/test" }),
-		"/Users/test/Library/Application Support/Google/Chrome",
-	);
-});
-
-test("validateProfileDirectoryName blocks traversal", () => {
-	assert.equal(validateProfileDirectoryName("Profile 1"), "Profile 1");
-	for (const value of ["", ".", "..", "../Default", "a/b", "a\\b"]) {
-		assert.throws(() => validateProfileDirectoryName(value), /invalid chrome profile directory/i);
-	}
-});
-
-test("profile copy excludes non-session and sensitive browser data", () => {
-	const args = profileCopyArguments({ sourceProfile: "/source/Default", destinationProfile: "/target/Default" });
-	const command = args.join(" ");
-	for (const excluded of ["Login Data*", "History*", "Web Data*", "Cache/", "Sessions/", "Extensions/", "Bookmarks*"]) {
-		assert.equal(command.includes(excluded), true, `${excluded} should be excluded`);
-	}
-	assert.equal(args.at(-2), "/source/Default/");
-	assert.equal(args.at(-1), "/target/Default/");
-});
+import { chromeBinaryCandidates, ensureDedicatedProfile } from "../browser-profile.js";
 
 test("configured Chrome binary takes precedence", () => {
 	const previous = process.env.BROWSER_TOOLS_CHROME;
@@ -40,5 +12,26 @@ test("configured Chrome binary takes precedence", () => {
 	} finally {
 		if (previous === undefined) delete process.env.BROWSER_TOOLS_CHROME;
 		else process.env.BROWSER_TOOLS_CHROME = previous;
+	}
+});
+
+test("ensureDedicatedProfile marks and reuses an empty profile", () => {
+	const directory = mkdtempSync(join(process.cwd(), ".test-dedicated-profile-"));
+	try {
+		ensureDedicatedProfile(directory);
+		assert.equal(existsSync(join(directory, ".browser-tools-dedicated-profile")), true);
+		assert.doesNotThrow(() => ensureDedicatedProfile(directory));
+	} finally {
+		rmSync(directory, { recursive: true, force: true });
+	}
+});
+
+test("ensureDedicatedProfile rejects an unmarked profile", () => {
+	const directory = mkdtempSync(join(process.cwd(), ".test-unmarked-profile-"));
+	try {
+		writeFileSync(join(directory, "Local State"), "{}");
+		assert.throws(() => ensureDedicatedProfile(directory), /unmarked Chrome profile/i);
+	} finally {
+		rmSync(directory, { recursive: true, force: true });
 	}
 });

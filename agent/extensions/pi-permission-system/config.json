@@ -62,7 +62,10 @@
       "touch *": "ask",
       "sleep *": "allow",
       "~/.pi/agent/skills/browser-tools/browser-*.js *": "allow",
-      "~/.pi/agent/skills/browser-tools/browser-start.js *--*profile*": "ask",
+      "~/.pi/agent/skills/browser-tools/browser-start.js *--*profile*": {
+        "action": "deny",
+        "reason": "Browser profile copying is disabled; use the dedicated browser-tools profile"
+      },
       "~/.pi/agent/skills/browser-tools/browser-eval.js *--allow-sensitive*": "ask"
     },
     "external_directory": {
