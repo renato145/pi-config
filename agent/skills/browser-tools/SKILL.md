@@ -19,6 +19,7 @@ All script paths below are relative to this skill directory (the directory conta
 6. Inspect first and perform consequential actions one at a time. Do not batch clicks or submissions merely for efficiency.
 7. Do not use `browser-eval.js --allow-sensitive` unless the user explicitly requests access to browser storage in the current conversation and understands that results may enter the model transcript.
 8. If the target tab is ambiguous, list tabs and select one explicitly. Never guess.
+9. Treat tab closure as consequential because it can discard unsaved page state. Identify the exact tab first and obtain the user's immediate confirmation unless their latest request already names that exact tab.
 
 ## Setup
 
@@ -64,6 +65,15 @@ Focus a tab by its listed number or an unambiguous URL/title fragment:
 ./browser-tabs.js --focus 2
 ./browser-tabs.js --focus instagram.com
 ```
+
+Close a tab by its listed number or an unambiguous URL/title fragment:
+
+```bash
+./browser-tabs.js --close 2
+./browser-tabs.js --close instagram.com
+```
+
+`--focus` and `--close` are mutually exclusive. Closing the final tab creates a blank replacement first so the managed browser remains running. Closure is immediate and can discard unsaved page state.
 
 Commands accept `--tab <index-or-text>`. Without `--tab`, they use the uniquely focused/visible tab; if that cannot be determined safely, they refuse and ask for explicit targeting.
 
