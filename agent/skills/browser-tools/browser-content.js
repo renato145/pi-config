@@ -63,7 +63,6 @@ await runCli(async () => {
 	const browser = await connectManagedBrowser();
 	try {
 		const page = newTab ? await browser.newPage() : await selectPage(browser, tab, { create: true });
-		await page.bringToFront();
 		await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
 		try {
 			await page.waitForNetworkIdle({ idleTime: 500, timeout: 5000 });

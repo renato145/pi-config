@@ -137,8 +137,7 @@ export async function inspectPages(browser) {
 export async function selectPage(browser, selector, { create = false } = {}) {
 	let pages = await inspectPages(browser);
 	if (pages.length === 0 && create) {
-		const page = await browser.newPage();
-		await page.bringToFront();
+		await browser.newPage();
 		pages = await inspectPages(browser);
 	}
 	if (pages.length === 0) throw new Error("No browser tabs are open.");

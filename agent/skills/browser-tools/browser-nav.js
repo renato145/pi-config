@@ -28,7 +28,6 @@ await runCli(async () => {
 	const browser = await connectManagedBrowser();
 	try {
 		const page = newTab ? await browser.newPage() : await selectPage(browser, tab, { create: true });
-		await page.bringToFront();
 		await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
 		if (reload) await page.reload({ waitUntil: "domcontentloaded", timeout: 30000 });
 		console.log(`✓ ${newTab ? "Opened" : "Navigated to"}: ${page.url()}`);

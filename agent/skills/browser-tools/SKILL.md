@@ -75,7 +75,7 @@ Commands accept `--tab <index-or-text>`. Without `--tab`, they use the uniquely 
 ./browser-nav.js https://example.com --tab 2
 ```
 
-A new tab is brought to the front so the user can see it.
+Navigation does not request desktop focus. New tabs may remain in the background until explicitly focused.
 
 ## Inspect or interact with the DOM
 
@@ -109,7 +109,7 @@ Prefer structured DOM inspection over screenshots when visual information is unn
 ./browser-pick.js --tab 2 "Select the submit button"
 ```
 
-The picker highlights elements in the visible page. Click once to select one element, Ctrl/Cmd+click to collect multiple elements, Enter to finish, or Escape to cancel. It returns actual CSS selectors plus non-secret element metadata. Selection does not activate the page element.
+The picker brings the target tab to the front because direct user input is required. It highlights elements in the visible page. Click once to select one element, Ctrl/Cmd+click to collect multiple elements, Enter to finish, or Escape to cancel. It returns actual CSS selectors plus non-secret element metadata. Selection does not activate the page element.
 
 ## Screenshot
 

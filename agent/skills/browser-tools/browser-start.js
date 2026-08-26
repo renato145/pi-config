@@ -67,8 +67,7 @@ await runCli(async () => {
 
 	try {
 		const pages = await browser.pages();
-		const page = pages[0] || (await browser.newPage());
-		await page.bringToFront();
+		if (pages.length === 0) await browser.newPage();
 		writeState({ pid: child.pid });
 	} finally {
 		await browser.disconnect();
