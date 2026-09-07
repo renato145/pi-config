@@ -11,5 +11,8 @@ await runCli(async () => {
 	console.log(status.managed ? "running" : "occupied by unmanaged browser");
 	console.log(`endpoint: http://${CDP_HOST}:${CDP_PORT}`);
 	console.log(`version: ${status.version}`);
-	if (status.managed) console.log(`profile: ${DATA_DIR}`);
+	if (status.managed) {
+		const attached = status.state?.kind === "attached" ? " (attached)" : "";
+		console.log(`profile: ${status.state?.dataDir ?? DATA_DIR}${attached}`);
+	}
 });

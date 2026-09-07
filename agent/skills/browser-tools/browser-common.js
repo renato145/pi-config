@@ -28,18 +28,21 @@ export function ensurePrivateDirectory(path) {
 export function readState() {
 	try {
 		const value = JSON.parse(readFileSync(STATE_FILE, "utf8"));
-		if (value?.dataDir !== DATA_DIR || value?.host !== CDP_HOST || value?.port !== CDP_PORT) return null;
+		if (!value || typeof value !== "object") return null;
+		if (value.host !== CDP_HOST || value.port !== CDP_PORT) return null;
+		const dedicated = value.kind === undefined || value.kind === "dedicated";
+		if (dedicated && value.dataDir !== DATA_DIR) return null;
 		return value;
 	} catch {
 		return null;
 	}
 }
 
-export function writeState({ pid }) {
+export function writeState({ pid, kind = "dedicated", dataDir = DATA_DIR }) {
 	ensurePrivateDirectory(DATA_DIR);
 	writeFileSync(
 		STATE_FILE,
-		`${JSON.stringify({ pid, host: CDP_HOST, port: CDP_PORT, dataDir: DATA_DIR, startedAt: new Date().toISOString() }, null, 2)}\n`,
+		`${JSON.stringify({ kind, pid, host: CDP_HOST, port: CDP_PORT, dataDir, startedAt: new Date().toISOString() }, null, 2)}\n`,
 		{ mode: 0o600 },
 	);
 	chmodSync(STATE_FILE, 0o600);
@@ -230,6 +233,18 @@ export function redactCookies(cookies) {
 		session: expires === -1 || expires === 0,
 		value: "[REDACTED]",
 	}));
+}
+
+// /proc cmdline is normally NUL-separated, but Chrome may rewrite it space-separated
+// with only a trailing NUL, so matching works on the raw string for both layouts.
+export function isBrowserMainProcess(cmdline, port) {
+	if (/(?:^|[\s\0])--type=/.test(cmdline)) return false;
+	return cmdline.includes(`--remote-debugging-port=${port}`);
+}
+
+export function userDataDirFromCmdline(cmdline) {
+	const match = cmdline.match(/(?:^|[\s\0])--user-data-dir=([^\s\0]*)/);
+	return match ? match[1] : null;
 }
 
 export async function disconnectQuietly(browser) {

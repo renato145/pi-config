@@ -51,6 +51,36 @@ Stop gracefully:
 ./browser-stop.js
 ```
 
+## Attaching to an external browser (e.g. Python Playwright)
+
+Browser-tools only controls browsers it launched itself or explicitly attached to. To
+work on a browser started elsewhere — for example a Playwright automation session —
+expose CDP on the browser-tools port and register it once:
+
+```python
+# Playwright: add the port browser-tools listens on (default 9222)
+browser = await pw.chromium.launch(headless=False, args=["--remote-debugging-port=9222"])
+```
+
+```bash
+./browser-attach.js
+```
+
+`browser-attach.js` scans for the browser process exposing `--remote-debugging-port=9222`,
+verifies the CDP endpoint, and records it. Afterwards every other command (tabs, nav,
+eval, screenshot, cookies, pick, content) controls that browser. Options:
+
+- `--pid <pid>` — disambiguate when several processes match
+- `--force` — switch attachment when another live browser is already registered
+
+Notes:
+
+- The target browser must expose CDP on `127.0.0.1:9222` (or set `BROWSER_TOOLS_PORT` to
+  the same value for the launch flag and every browser-tools command).
+- Attaching to a browser running the normal Chrome profile is refused; automation
+  profiles are fine (Playwright supplies a temporary one automatically).
+- `./browser-stop.js` closes the attached browser and clears the registration.
+
 ## Tabs and targeting
 
 List tabs:

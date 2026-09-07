@@ -10,7 +10,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "check": "node --check browser-common.js && node --check browser-profile.js && node --check browser-start.js && node --check browser-status.js && node --check browser-stop.js && node --check browser-tabs.js && node --check browser-nav.js && node --check browser-eval.js && node --check browser-content.js && node --check browser-cookies.js && node --check browser-screenshot.js && node --check browser-pick.js",
+    "check": "node --check browser-common.js && node --check browser-profile.js && node --check browser-attach.js && node --check browser-start.js && node --check browser-status.js && node --check browser-stop.js && node --check browser-tabs.js && node --check browser-nav.js && node --check browser-eval.js && node --check browser-content.js && node --check browser-cookies.js && node --check browser-screenshot.js && node --check browser-pick.js",
     "test": "node --test test/*.test.js"
   },
   "dependencies": {
