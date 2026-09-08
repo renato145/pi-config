@@ -102,10 +102,10 @@ export async function getBrowserStatus() {
 export async function connectManagedBrowser() {
 	const status = await getBrowserStatus();
 	if (!status.running) {
-		throw new Error("Browser is not running. Run ./browser-start.js first.");
+		throw new Error("Browser is not running. Run ./browser-start.js or ./browser-attach.js first.");
 	}
 	if (!status.managed) {
-		throw new Error(`CDP port ${CDP_PORT} is occupied by an unmanaged browser; refusing to control it.`);
+		throw new Error(`CDP port ${CDP_PORT} is occupied by an unmanaged browser; run ./browser-attach.js to control it.`);
 	}
 	return connectBrowser();
 }
@@ -239,7 +239,7 @@ export function redactCookies(cookies) {
 // with only a trailing NUL, so matching works on the raw string for both layouts.
 export function isBrowserMainProcess(cmdline, port) {
 	if (/(?:^|[\s\0])--type=/.test(cmdline)) return false;
-	return cmdline.includes(`--remote-debugging-port=${port}`);
+	return cmdline.split(/[\s\0]/).includes(`--remote-debugging-port=${port}`);
 }
 
 export function userDataDirFromCmdline(cmdline) {

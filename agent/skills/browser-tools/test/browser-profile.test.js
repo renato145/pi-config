@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
-import { chromeBinaryCandidates, ensureDedicatedProfile } from "../browser-profile.js";
+import { chromeBinaryCandidates, ensureDedicatedProfile, isNormalChromeProfile } from "../browser-profile.js";
 
 test("configured Chrome binary takes precedence", () => {
 	const previous = process.env.BROWSER_TOOLS_CHROME;
@@ -24,6 +24,17 @@ test("ensureDedicatedProfile marks and reuses an empty profile", () => {
 	} finally {
 		rmSync(directory, { recursive: true, force: true });
 	}
+});
+
+test("isNormalChromeProfile refuses default Chrome locations and allows automation profiles", () => {
+	const options = { platform: "linux", home: "/home/test" };
+	assert.equal(isNormalChromeProfile(undefined, options), true);
+	assert.equal(isNormalChromeProfile("/home/test/.config/google-chrome", options), true);
+	assert.equal(isNormalChromeProfile("/home/test/.config/google-chrome/", options), true);
+	assert.equal(isNormalChromeProfile("~/.config/google-chrome", options), true);
+	assert.equal(isNormalChromeProfile("/home/test/.config/google-chrome-beta", options), true);
+	assert.equal(isNormalChromeProfile("/tmp/playwright_chromiumdev_profile-x", options), false);
+	assert.equal(isNormalChromeProfile("/home/test/.cache/browser-tools", options), false);
 });
 
 test("ensureDedicatedProfile rejects an unmarked profile", () => {

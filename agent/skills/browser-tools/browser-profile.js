@@ -1,7 +1,7 @@
 import { accessSync, existsSync, lstatSync, readdirSync, readlinkSync, rmSync, writeFileSync } from "node:fs";
 import { constants as fsConstants } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, resolve, sep } from "node:path";
 import { ensurePrivateDirectory, isProcessAlive } from "./browser-common.js";
 
 const DEDICATED_PROFILE_MARKER = ".browser-tools-dedicated-profile";
@@ -21,6 +21,49 @@ export function chromeBinaryCandidates({ platform = process.platform, home = hom
 		];
 	}
 	return [];
+}
+
+export function defaultChromeProfileDirs({ platform = process.platform, home = homedir() } = {}) {
+	if (platform === "darwin") {
+		const support = join(home, "Library", "Application Support");
+		return [
+			join(support, "Google", "Chrome"),
+			join(support, "Google", "Chrome Beta"),
+			join(support, "Google", "Chrome Canary"),
+			join(support, "Chromium"),
+		];
+	}
+	if (platform === "linux") {
+		return [
+			join(home, ".config", "google-chrome"),
+			join(home, ".config", "google-chrome-beta"),
+			join(home, ".config", "google-chrome-unstable"),
+			join(home, ".config", "google-chrome-canary"),
+			join(home, ".config", "chromium"),
+			join(home, "snap", "chromium", "common", "chromium"),
+			join(home, "snap", "google-chrome", "common", "google-chrome"),
+		];
+	}
+	if (platform === "win32") {
+		const localAppData = process.env.LOCALAPPDATA || join(home, "AppData", "Local");
+		return [
+			join(localAppData, "Google", "Chrome", "User Data"),
+			join(localAppData, "Google", "Chrome Beta", "User Data"),
+			join(localAppData, "Chromium", "User Data"),
+		];
+	}
+	return [];
+}
+
+export function isNormalChromeProfile(dataDir, options = {}) {
+	if (!dataDir) return true;
+	const home = options.home ?? homedir();
+	const expanded = dataDir === "~" ? home : dataDir.startsWith("~/") ? join(home, dataDir.slice(2)) : dataDir;
+	const resolved = resolve(expanded);
+	return defaultChromeProfileDirs({ ...options, home }).some((dir) => {
+		const normalized = resolve(dir);
+		return resolved === normalized || resolved.startsWith(normalized + sep);
+	});
 }
 
 export function findChromeBinary(options) {

@@ -8,6 +8,12 @@ test("isBrowserMainProcess matches space-separated cmdlines (Chrome rewrites arg
 	assert.equal(isBrowserMainProcess(cmdline, 9223), false);
 });
 
+test("isBrowserMainProcess does not treat 9222 as a prefix of 92220", () => {
+	const cmdline = "/usr/bin/chrome --remote-debugging-port=92220 --user-data-dir=/tmp/p\0";
+	assert.equal(isBrowserMainProcess(cmdline, 9222), false);
+	assert.equal(isBrowserMainProcess(cmdline, 92220), true);
+});
+
 test("isBrowserMainProcess matches NUL-separated cmdlines", () => {
 	const cmdline = "/usr/bin/chrome\0--remote-debugging-port=9222\0--user-data-dir=/tmp/p\0";
 	assert.equal(isBrowserMainProcess(cmdline, 9222), true);

@@ -23,7 +23,7 @@ if (process.argv.length > 2) {
 await runCli(async () => {
 	const status = await getBrowserStatus();
 	if (status.running) {
-		if (!status.managed) throw new Error(`CDP port ${CDP_PORT} is occupied by an unmanaged browser.`);
+		if (!status.managed) throw new Error(`CDP port ${CDP_PORT} is occupied by an unmanaged browser. Run ./browser-attach.js to control it, or stop that browser first.`);
 		console.log(`✓ Browser already running at http://${CDP_HOST}:${CDP_PORT}`);
 		return;
 	}

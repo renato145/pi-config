@@ -66,9 +66,9 @@ browser = await pw.chromium.launch(headless=False, args=["--remote-debugging-por
 ./browser-attach.js
 ```
 
-`browser-attach.js` scans for the browser process exposing `--remote-debugging-port=9222`,
-verifies the CDP endpoint, and records it. Afterwards every other command (tabs, nav,
-eval, screenshot, cookies, pick, content) controls that browser. Options:
+`browser-attach.js` scans for the browser process exposing `--remote-debugging-port` on the
+configured port, verifies the CDP endpoint, and records it. Afterwards every other command
+(tabs, nav, eval, screenshot, cookies, pick, content) controls that browser. Options:
 
 - `--pid <pid>` — disambiguate when several processes match
 - `--force` — switch attachment when another live browser is already registered
@@ -77,9 +77,11 @@ Notes:
 
 - The target browser must expose CDP on `127.0.0.1:9222` (or set `BROWSER_TOOLS_PORT` to
   the same value for the launch flag and every browser-tools command).
+- Process discovery uses Linux `/proc`. Attach is not supported on macOS or Windows.
 - Attaching to a browser running the normal Chrome profile is refused; automation
   profiles are fine (Playwright supplies a temporary one automatically).
-- `./browser-stop.js` closes the attached browser and clears the registration.
+- `./browser-stop.js` closes the attached browser and clears the registration. There is no
+  detach-without-close.
 
 ## Tabs and targeting
 
