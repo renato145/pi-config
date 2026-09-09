@@ -25,6 +25,7 @@
     "opencode-go/glm-5.3",
     "opencode-go/glm-5.3-flash",
     "opencode/grok-4.6",
-    "openai/gpt-6-astra"
+    "openai/gpt-6-astra",
+    "opencode/muse-spark-1.3"
   ]
 }
