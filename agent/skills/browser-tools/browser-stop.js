@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { connectBrowser, getBrowserStatus, isProcessAlive, removeState, runCli } from "./browser-common.js";
+import { connectBrowser, disconnectQuietly, getBrowserStatus, isProcessAlive, removeState, runCli } from "./browser-common.js";
 
 await runCli(async () => {
 	const status = await getBrowserStatus();
@@ -10,6 +10,15 @@ await runCli(async () => {
 		return;
 	}
 	if (!status.managed) throw new Error("Refusing to stop an unmanaged browser on the CDP port.");
+
+	if (status.state?.kind === "remote") {
+		// The remote browser is not ours to kill (e.g. it is driving a scraper); detach only.
+		const remoteBrowser = await connectBrowser();
+		await disconnectQuietly(remoteBrowser);
+		removeState();
+		console.log("✓ Detached from remote browser (left running)");
+		return;
+	}
 
 	const browser = await connectBrowser();
 	try {

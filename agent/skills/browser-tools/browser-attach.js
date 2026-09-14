@@ -78,8 +78,36 @@ await runCli(async () => {
 	const args = process.argv.slice(2);
 	const force = takeFlag(args, "--force");
 	const pidOption = takeOption(args, "--pid");
+	const remote = takeFlag(args, "--remote");
 	assertNoUnknownOptions(args);
 	if (args.length > 0) throw new Error(`Unexpected argument: ${args[0]}`);
+
+	if (remote) {
+		if (pidOption !== undefined) throw new Error("--pid cannot be combined with --remote.");
+		const versionInfo = await readCdpVersion();
+		if (!versionInfo) {
+			throw new Error(
+				`No CDP endpoint at http://${CDP_HOST}:${CDP_PORT}. ` +
+					"Forward the remote browser first (e.g. `kubectl port-forward <pod> 9222:9222` or `ssh -L 9222:127.0.0.1:9222`) and retry.",
+			);
+		}
+		const currentState = readState();
+		if (!force && currentState && (currentState.kind === "remote" || isProcessAlive(currentState.pid))) {
+			throw new Error("Browser-tools already controls a live browser. Re-run with --force to switch.");
+		}
+		let tabs;
+		const browser = await connectBrowser();
+		try {
+			tabs = (await browser.pages()).length;
+		} finally {
+			await disconnectQuietly(browser);
+		}
+		writeState({ pid: null, kind: "remote" });
+		console.log(`✓ Attached to remote browser: ${versionInfo.Browser} at http://${CDP_HOST}:${CDP_PORT}`);
+		console.log("  Remote mode: ./browser-stop.js detaches without closing the remote browser.");
+		console.log(`  tabs: ${tabs}`);
+		return;
+	}
 
 	const pidFilter = pidOption === undefined ? undefined : parsePidOption(pidOption);
 	const candidates = browserProcessesOnPort(CDP_PORT).filter((candidate) => pidFilter === undefined || candidate.pid === pidFilter);

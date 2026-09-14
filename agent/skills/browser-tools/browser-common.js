@@ -92,7 +92,7 @@ export async function getBrowserStatus() {
 
 	try {
 		const version = await browser.version();
-		const managed = Boolean(state && isProcessAlive(state.pid));
+		const managed = Boolean(state && (state.kind === "remote" || isProcessAlive(state.pid)));
 		return { running: true, managed, state, version };
 	} finally {
 		await browser.disconnect();

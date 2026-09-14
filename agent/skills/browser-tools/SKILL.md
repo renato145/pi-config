@@ -72,6 +72,10 @@ configured port, verifies the CDP endpoint, and records it. Afterwards every oth
 
 - `--pid <pid>` — disambiguate when several processes match
 - `--force` — switch attachment when another live browser is already registered
+- `--remote` — attach to a browser on another host, reached through a tunnel on `CDP_PORT`
+  (e.g. `kubectl port-forward <pod> 9222:9222` or `ssh -L 9222:127.0.0.1:9222`). Skips local
+  process discovery; `./browser-stop.js` detaches without closing the remote browser. Profile
+  safety checks cannot run remotely — only attach tunnels you created yourself.
 
 Notes:
 

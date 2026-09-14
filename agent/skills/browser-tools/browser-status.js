@@ -12,7 +12,11 @@ await runCli(async () => {
 	console.log(`endpoint: http://${CDP_HOST}:${CDP_PORT}`);
 	console.log(`version: ${status.version}`);
 	if (status.managed) {
-		const attached = status.state?.kind === "attached" ? " (attached)" : "";
-		console.log(`profile: ${status.state?.dataDir ?? DATA_DIR}${attached}`);
+		if (status.state?.kind === "remote") {
+			console.log("profile: (remote browser)");
+		} else {
+			const attached = status.state?.kind === "attached" ? " (attached)" : "";
+			console.log(`profile: ${status.state?.dataDir ?? DATA_DIR}${attached}`);
+		}
 	}
 });
