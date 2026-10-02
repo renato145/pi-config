@@ -15,6 +15,7 @@
   ],
   "hideThinkingBlock": true,
   "enableSkillCommands": true,
+  "defaultTools": ["+codemode"],
   "defaultProvider": "opencode",
   "defaultModel": "glm-5.3-flash",
   "defaultThinkingLevel": "max",
