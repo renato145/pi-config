@@ -1,13 +1,11 @@
 {
-  "lastChangelogVersion": "1.0.0",
+  "lastChangelogVersion": "1.0.2",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system",
     {
       "source": "npm:pi-edit-session-in-place",
-      "extensions": [
-        "-extensions/edit-session-in-place.ts"
-      ]
+      "extensions": ["-extensions/edit-session-in-place.ts"]
     },
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:pi-scoped-models-extra-info",
@@ -28,7 +26,5 @@
     "opencode/claude-opus-5-5",
     "opencode/gpt-6.1-sol"
   ],
-  "skills": [
-    "-skills/browser-tools/SKILL.md"
-  ]
+  "skills": ["-skills/browser-tools/SKILL.md"]
 }
