@@ -2,6 +2,9 @@
 /agent/extensions/pi-permission-system/logs
 /agent/node_modules
 /agent/bun.lock
+# Managed install (created/updated by the pi installer)
+/agent/bin
+/agent/install
 /agent/models-store.json
 /agent/trust.json
 /agent/skills/browser-tools/node_modules
