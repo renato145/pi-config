@@ -26,5 +26,6 @@
     "opencode/claude-opus-5-5",
     "opencode/gpt-6.1-sol"
   ],
-  "skills": ["-skills/browser-tools/SKILL.md"]
+  "skills": ["-skills/browser-tools/SKILL.md"],
+  "tuiMode": "regular"
 }
