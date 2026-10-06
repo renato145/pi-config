@@ -80,6 +80,9 @@
       "*": "ask",
       "~/.pi/agent/skills/browser-tools": "allow",
       "~/.pi/agent/skills/browser-tools/*": "allow"
+    },
+    "external_directory_read": {
+      "/tmp/*": "allow"
     }
   }
 }
