@@ -51,6 +51,8 @@
       "sed --in-place *": "ask",
       "head *": "allow",
       "tail *": "allow",
+      "date": "allow",
+      "date *": "allow",
       "wc *": "allow",
       "which *": "allow",
       "readlink *": "allow",
