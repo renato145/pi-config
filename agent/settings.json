@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.0.3",
+  "lastChangelogVersion": "1.2.0",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system",

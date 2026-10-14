@@ -8,9 +8,13 @@
  * The marker is the per-pane tmux user option `@pi_attention`, read by the
  * status-bar module in `tmux/.config/tmux/tmux.conf` and cleared by the
  * `pane-focus-in` hook (you have looked at the pane) or the next user prompt.
- * Everything is a no-op outside tmux and in non-interactive modes.
+ * Everything is a no-op outside tmux and without a UI (scripted runs).
+ *
+ * Set PI_TMUX_ATTENTION_DEBUG to a file path to log every decision
+ * (events, marks, suppressions, failures).
  */
 
+import { appendFileSync } from "node:fs";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const ATTENTION_OPTION = "@pi_attention";
@@ -22,16 +26,34 @@ export default function tmuxAttention(pi: ExtensionAPI) {
   const pane = process.env.TMUX_PANE;
   if (!pane) return;
 
+  const debug = (message: string) => {
+    const path = process.env.PI_TMUX_ATTENTION_DEBUG;
+    if (!path) return;
+    try {
+      appendFileSync(path, `${new Date().toISOString()} ${message}\n`);
+    } catch {
+      // Debug logging is best-effort; never let it disrupt the agent.
+    }
+  };
+
   // State mutations run through one queue so overlapping events (a prompt
   // closing while the agent settles) land on tmux in the order they fired.
   let queue: Promise<void> = Promise.resolve();
   const enqueue = (work: () => Promise<void>) => {
-    queue = queue.then(work).catch(() => {});
+    queue = queue.then(work).catch((error: unknown) => {
+      debug(`queue error: ${error instanceof Error ? error.message : error}`);
+    });
   };
 
+  // pi.exec never rejects (it resolves {code, stdout, stderr}), so treat a
+  // nonzero exit as failure: the queue keeps the last known state instead of
+  // acting on empty output (which would, for example, zero a valid count).
   const runTmux = async (...args: string[]): Promise<string> => {
-    const result = await pi.exec("tmux", args);
-    return result.stdout ?? "";
+    const result = await pi.exec("tmux", args, { timeout: 2000 });
+    if (result.code !== 0) {
+      throw new Error(`tmux ${args[0]} failed: ${result.stderr.trim()}`);
+    }
+    return result.stdout;
   };
 
   const setPaneState = (state: AttentionState) =>
@@ -52,19 +74,12 @@ export default function tmuxAttention(pi: ExtensionAPI) {
 
   const refreshStatus = () => runTmux("refresh-client", "-S");
 
-  const mark = (state: AttentionState) =>
-    enqueue(async () => {
-      await setPaneState(state);
-      await recount();
-      await refreshStatus();
-    });
-
-  const unmark = () =>
-    enqueue(async () => {
-      await clearPaneState();
-      await recount();
-      await refreshStatus();
-    });
+  const finalize = async (state?: AttentionState) => {
+    if (state) await setPaneState(state);
+    else await clearPaneState();
+    await recount();
+    await refreshStatus();
+  };
 
   // A pane counts as "on screen" only when a focused client is attached to its
   // session AND its window is the session's current window AND it is the
@@ -73,11 +88,18 @@ export default function tmuxAttention(pi: ExtensionAPI) {
   // pane_active=1 while clearly not being watched.
   const isOnScreen = async () => {
     try {
-      const query = async (format: string) =>
-        (await runTmux("display-message", "-p", "-t", pane, format)).trim();
-      if ((await query("#{window_active}")) !== "1") return false;
-      if ((await query("#{pane_active}")) !== "1") return false;
-      const sessionId = await query("#{session_id}");
+      const [windowActive, paneActive, sessionId] = (
+        await runTmux(
+          "display-message",
+          "-p",
+          "-t",
+          pane,
+          "#{window_active} #{pane_active} #{session_id}",
+        )
+      )
+        .trim()
+        .split(/\s+/);
+      if (windowActive !== "1" || paneActive !== "1" || !sessionId) return false;
       const clients = await runTmux("list-clients", "-F", "#{client_session}\t#{client_flags}");
       return clients.split("\n").some((line) => {
         const [clientSession, flags] = line.split("\t");
@@ -95,34 +117,49 @@ export default function tmuxAttention(pi: ExtensionAPI) {
     }
   };
 
-  pi.on("session_start", () => {
-    unmark();
+  pi.on("session_start", (_event, ctx) => {
+    if (!ctx.hasUI) return;
+    debug("session_start; clearing");
+    enqueue(() => finalize());
   });
 
-  pi.on("before_agent_start", () => {
-    // The user just submitted a prompt; the pane is attended.
-    unmark();
+  pi.on("before_agent_start", (_event, ctx) => {
+    if (!ctx.hasUI) return;
+    debug("before_agent_start; user engaged, clearing");
+    enqueue(() => finalize());
   });
 
-  pi.on("ui_prompt_start", () => {
-    mark("input");
+  pi.on("ui_prompt_start", (_event, ctx) => {
+    if (!ctx.hasUI) return;
+    debug("ui_prompt_start; marking input");
+    enqueue(() => finalize("input"));
   });
 
-  pi.on("ui_prompt_end", () => {
-    unmark();
+  pi.on("ui_prompt_end", (_event, ctx) => {
+    if (!ctx.hasUI) return;
+    debug("ui_prompt_end; clearing");
+    enqueue(() => finalize());
   });
 
-  pi.on("agent_settled", (event) => {
-    if (event.aborted) return; // The user pressed Escape, they are right here.
+  pi.on("agent_settled", (event, ctx) => {
+    if (!ctx.hasUI) return;
+    if (event.aborted) {
+      debug("settled aborted; user is right here");
+      return;
+    }
     enqueue(async () => {
-      if (await isOnScreen()) return;
-      await setPaneState("done");
-      await recount();
-      await refreshStatus();
+      if (await isOnScreen()) {
+        debug("settled on screen; suppressed");
+        return;
+      }
+      debug("settled off screen; marking done");
+      await finalize("done");
     });
   });
 
-  pi.on("session_shutdown", () => {
-    unmark();
+  pi.on("session_shutdown", (_event, ctx) => {
+    if (!ctx.hasUI) return;
+    debug("session_shutdown; clearing");
+    enqueue(() => finalize());
   });
 }
