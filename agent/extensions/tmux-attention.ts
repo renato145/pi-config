@@ -85,26 +85,27 @@ export default function tmuxAttention(pi: ExtensionAPI) {
   // session AND its window is the session's current window AND it is the
   // window's active pane. Checking any one of these alone misfires: when the
   // user switches to another window (or session), the pi pane keeps
-  // pane_active=1 while clearly not being watched.
+  // pane_active=1 while clearly not being watched. Clients expose the session
+  // only by name (client_session), so the pane reports session_name too.
   const isOnScreen = async () => {
     try {
-      const [windowActive, paneActive, sessionId] = (
+      const [windowActive, paneActive, sessionName] = (
         await runTmux(
           "display-message",
           "-p",
           "-t",
           pane,
-          "#{window_active} #{pane_active} #{session_id}",
+          "#{window_active} #{pane_active} #{session_name}",
         )
       )
         .trim()
         .split(/\s+/);
-      if (windowActive !== "1" || paneActive !== "1" || !sessionId) return false;
+      if (windowActive !== "1" || paneActive !== "1" || !sessionName) return false;
       const clients = await runTmux("list-clients", "-F", "#{client_session}\t#{client_flags}");
       return clients.split("\n").some((line) => {
         const [clientSession, flags] = line.split("\t");
         return (
-          clientSession === sessionId &&
+          clientSession === sessionName &&
           (flags ?? "")
             .split(",")
             .map((flag) => flag.trim())
