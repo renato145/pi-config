@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.2.0",
+  "lastChangelogVersion": "1.4.0",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system",
@@ -19,7 +19,7 @@
     "+codemode"
   ],
   "defaultProvider": "opencode",
-  "defaultModel": "glm-5.3-flash",
+  "defaultModel": "deepseek-v4.1-flash",
   "defaultThinkingLevel": "max",
   "theme": "dark",
   "enabledModels": [
@@ -28,7 +28,10 @@
     "opencode/glm-5.3-flash",
     "opencode-go/mimo-v2.6-pro",
     "opencode/claude-opus-5-5",
-    "opencode/gpt-6.1-sol"
+    "opencode/gpt-6.1-sol",
+    "opencode/glm-5.3-flash-free",
+    "opencode/deepseek-v4.1-flash",
+    "opencode-go/kimi-k3.1-pro"
   ],
   "skills": [
     "-skills/browser-tools/SKILL.md"
