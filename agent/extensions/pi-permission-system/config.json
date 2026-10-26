@@ -1,10 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json",
 
-  "piInfrastructureReadPaths": [
-    "/home/renato/.local/share/nvm/v24.14.0/lib/node_modules/@earendil-works/pi-coding-agent"
-  ],
-
   "permission": {
     "*": "ask",
     "ask_user_question": "allow",
@@ -12,7 +8,15 @@
       "*": "allow",
       "*.env": "deny",
       "*.env.*": "deny",
-      "*.env.example": "allow"
+      "*.env.example": "allow",
+      "~/.ssh/*": "deny",
+      "~/.aws/*": "deny",
+      "~/.gnupg/*": "deny",
+      "~/.config/gh/hosts.yml": "deny",
+      "*/.netrc": "deny",
+      "*.pem": "ask",
+      "*.key": "ask",
+      "*id_rsa*": "ask"
     },
     "skill": {
       "*": "ask",
@@ -86,5 +90,7 @@
     "external_directory_read": {
       "/tmp/*": "allow"
     }
-  }
+  },
+
+  "promptNotifications": ["bell"]
 }

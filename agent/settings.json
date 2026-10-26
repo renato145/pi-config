@@ -1,13 +1,12 @@
 {
+  "$schema": "https://pi.dev/schemas/settings.schema.json",
   "lastChangelogVersion": "1.4.0",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system",
     {
       "source": "npm:pi-edit-session-in-place",
-      "extensions": [
-        "-extensions/edit-session-in-place.ts"
-      ]
+      "extensions": ["-extensions/edit-session-in-place.ts"]
     },
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:pi-scoped-models-extra-info",
@@ -15,9 +14,7 @@
   ],
   "hideThinkingBlock": true,
   "enableSkillCommands": true,
-  "defaultTools": [
-    "+codemode"
-  ],
+  "defaultTools": ["+codemode"],
   "defaultProvider": "opencode",
   "defaultModel": "deepseek-v4.1-flash",
   "defaultThinkingLevel": "max",
@@ -33,8 +30,7 @@
     "opencode/deepseek-v4.1-flash",
     "opencode-go/kimi-k3.1-pro"
   ],
-  "skills": [
-    "-skills/browser-tools/SKILL.md"
-  ],
+  "skills": ["-skills/browser-tools/SKILL.md"],
+  "treeFilterMode": "no-tools",
   "tuiMode": "regular"
 }
