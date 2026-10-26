@@ -182,6 +182,24 @@ const LANGUAGE_SKILLS_ROOT = join(
 );
 
 /**
+ * Skill families that also apply to a detected language. TypeScript uses the
+ * JavaScript guidelines because no TypeScript-specific skill is required.
+ */
+const SKILL_LANGUAGE_ALIASES: Record<string, string[]> = {
+  typescript: ["javascript"],
+};
+
+function skillLanguageCandidates(detectedLangs: string[]): string[] {
+  const candidates = new Set(detectedLangs);
+  for (const lang of detectedLangs) {
+    for (const alias of SKILL_LANGUAGE_ALIASES[lang] ?? []) {
+      candidates.add(alias);
+    }
+  }
+  return Array.from(candidates);
+}
+
+/**
  * Scan the language-skills root for skills matching detected languages.
  * Convention: {root}/{language}-{topic}/SKILL.md
  */
@@ -189,12 +207,13 @@ function findLanguageSkills(detectedLangs: string[]): FoundSkill[] {
   const results: FoundSkill[] = [];
   if (!dirExists(LANGUAGE_SKILLS_ROOT)) return results;
 
+  const candidates = skillLanguageCandidates(detectedLangs);
   const entries = readdirSync(LANGUAGE_SKILLS_ROOT, { withFileTypes: true });
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
 
     // Match naming convention: {language}-{topic} or just {language}
-    const match = detectedLangs.find(
+    const match = candidates.find(
       (lang) => entry.name === lang || entry.name.startsWith(`${lang}-`),
     );
     if (!match) continue;
