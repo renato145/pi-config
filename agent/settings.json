@@ -30,7 +30,6 @@
     "opencode/deepseek-v4.1-flash",
     "opencode-go/kimi-k3.1-pro"
   ],
-  "skills": ["-skills/browser-tools/SKILL.md"],
   "treeFilterMode": "no-tools",
   "tuiMode": "regular"
 }

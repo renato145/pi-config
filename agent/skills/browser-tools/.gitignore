@@ -1,6 +1,0 @@
-node_modules/
-artifacts/
-.test-profile/
-.test-state/
-.test-dedicated-profile-*/
-.test-unmarked-profile-*/

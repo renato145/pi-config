@@ -20,7 +20,6 @@
     },
     "skill": {
       "*": "ask",
-      "browser-tools": "ask",
       "javascript-guidelines": "allow",
       "python-guidelines": "allow",
       "rust-guidelines": "allow"
@@ -66,26 +65,10 @@
       "cargo fmt*": "allow",
       "mkdir *": "ask",
       "touch *": "ask",
-      "sleep *": "allow",
-      "cd /home/renato/.pi/agent/skills/browser-tools*": "allow",
-      "cd ~/.pi/agent/skills/browser-tools*": "allow",
-      "./browser-*.js *": "allow",
-      "~/.pi/agent/skills/browser-tools/browser-*.js *": "allow",
-      "./browser-start.js *--*profile*": {
-        "action": "deny",
-        "reason": "Browser profile copying is disabled; use the dedicated browser-tools profile"
-      },
-      "./browser-eval.js *--allow-sensitive*": "ask",
-      "~/.pi/agent/skills/browser-tools/browser-start.js *--*profile*": {
-        "action": "deny",
-        "reason": "Browser profile copying is disabled; use the dedicated browser-tools profile"
-      },
-      "~/.pi/agent/skills/browser-tools/browser-eval.js *--allow-sensitive*": "ask"
+      "sleep *": "allow"
     },
     "external_directory": {
-      "*": "ask",
-      "~/.pi/agent/skills/browser-tools": "allow",
-      "~/.pi/agent/skills/browser-tools/*": "allow"
+      "*": "ask"
     },
     "external_directory_read": {
       "/tmp/*": "allow"
