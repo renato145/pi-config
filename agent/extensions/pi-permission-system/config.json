@@ -71,7 +71,10 @@
       "*": "ask"
     },
     "external_directory_read": {
-      "/tmp/*": "allow"
+      "/tmp/*": "allow",
+      "~/.pi/agent/install/*": "allow",
+      "~/.pi/agent/skills": "allow",
+      "~/.pi/agent/skills/*": "allow"
     }
   },
 
