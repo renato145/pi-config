@@ -10,6 +10,12 @@
         "ALLOW_IMG_OUTPUT": "true"
       },
       "exposure": "codemode",
+      "toolExposure": {
+        "read_cell": "direct",
+        "execute_cell": "direct",
+        "execute_code": "direct",
+        "insert_execute_code_cell": "direct"
+      },
       "timeout": 600
     }
   }
