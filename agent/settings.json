@@ -1,20 +1,18 @@
 {
   "$schema": "https://pi.dev/schemas/settings.schema.json",
-  "lastChangelogVersion": "1.4.0",
+  "lastChangelogVersion": "1.6.0",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system",
-    {
-      "source": "npm:pi-edit-session-in-place",
-      "extensions": ["-extensions/edit-session-in-place.ts"]
-    },
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:pi-scoped-models-extra-info",
     "git:github.com/earendil-works/pi-review"
   ],
   "hideThinkingBlock": true,
   "enableSkillCommands": true,
-  "defaultTools": ["+codemode"],
+  "defaultTools": [
+    "+codemode"
+  ],
   "defaultProvider": "opencode",
   "defaultModel": "deepseek-v4.1-flash",
   "defaultThinkingLevel": "max",
@@ -22,14 +20,18 @@
   "enabledModels": [
     "opencode/muse-spark-1.3",
     "opencode/glm-5.3",
-    "opencode/glm-5.3-flash",
-    "opencode-go/mimo-v2.6-pro",
     "opencode/claude-opus-5-5",
-    "opencode/gpt-6.1-sol",
-    "opencode/glm-5.3-flash-free",
     "opencode/deepseek-v4.1-flash",
-    "opencode-go/kimi-k3.1-pro"
+    "opencode/muse-ember-1.0",
+    "opencode/gpt-6.2-astra",
+    "opencode/gpt-6.2-sol",
+    "opencode/gemini-4-neon",
+    "opencode/gemini-4-carbon",
+    "opencode/gemini-4-hydrogen"
   ],
   "treeFilterMode": "no-tools",
-  "tuiMode": "regular"
+  "tuiMode": "regular",
+  "extensionChangelogVersions": {
+    "{\"source\":\"npm:@gotgenes/pi-permission-system\",\"scope\":\"user\"}": "42.2.1"
+  }
 }

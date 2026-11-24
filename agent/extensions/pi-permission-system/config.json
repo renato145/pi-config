@@ -1,9 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json",
-
+  "debugLog": false,
+  "permissionReviewLog": true,
+  "yoloMode": false,
+  "promptNotifications": [
+    "bell"
+  ],
   "permission": {
     "*": "ask",
-    "ask_user_question": "allow",
     "path": {
       "*": "allow",
       "*.env": "deny",
@@ -18,20 +22,15 @@
       "*.key": "ask",
       "*id_rsa*": "ask"
     },
-    "skill": {
-      "*": "ask",
-      "javascript-guidelines": "allow",
-      "python-guidelines": "allow",
-      "rust-guidelines": "allow"
+    "external_directory": {
+      "*": "ask"
     },
-    "read": "allow",
-    "write": "ask",
-    "edit": "ask",
-    "find": "allow",
-    "grep": "allow",
-    "ls": "allow",
-    "web_search": "allow",
-    "web_fetch": "allow",
+    "external_directory_read": {
+      "/tmp/*": "allow",
+      "~/.pi/agent/install/*": "allow",
+      "~/.pi/agent/skills": "allow",
+      "~/.pi/agent/skills/*": "allow"
+    },
     "bash": {
       "*": "ask",
       "rm -rf *": "deny",
@@ -67,16 +66,20 @@
       "touch *": "ask",
       "sleep *": "allow"
     },
-    "external_directory": {
-      "*": "ask"
+    "skill": {
+      "*": "ask",
+      "javascript-guidelines": "allow",
+      "python-guidelines": "allow",
+      "rust-guidelines": "allow"
     },
-    "external_directory_read": {
-      "/tmp/*": "allow",
-      "~/.pi/agent/install/*": "allow",
-      "~/.pi/agent/skills": "allow",
-      "~/.pi/agent/skills/*": "allow"
-    }
-  },
-
-  "promptNotifications": ["bell"]
+    "ask_user_question": "allow",
+    "read": "allow",
+    "write": "ask",
+    "edit": "ask",
+    "find": "allow",
+    "grep": "allow",
+    "ls": "allow",
+    "web_search": "allow",
+    "web_fetch": "allow"
+  }
 }
