@@ -1,6 +1,6 @@
 {
   "$schema": "https://pi.dev/schemas/settings.schema.json",
-  "lastChangelogVersion": "1.6.0",
+  "lastChangelogVersion": "1.7.0",
   "packages": [
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@gotgenes/pi-permission-system",
@@ -32,6 +32,6 @@
   "treeFilterMode": "no-tools",
   "tuiMode": "regular",
   "extensionChangelogVersions": {
-    "{\"source\":\"npm:@gotgenes/pi-permission-system\",\"scope\":\"user\"}": "42.2.1"
+    "{\"source\":\"npm:@gotgenes/pi-permission-system\",\"scope\":\"user\"}": "45.1.0"
   }
 }
